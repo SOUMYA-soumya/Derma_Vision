@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagnomass | Derma-Vision AI</title>
+    <style>
+        :root {
+            --primary: #008080; /* Teal */
+            --primary-dark: #004c4c;
+            --bg: #f4f7f6;
+            --card-bg: #ffffff;
+            --text: #333333;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            background-color: var(--card-bg);
+            max-width: 600px;
+            width: 100%;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: var(--primary-dark);
+            text-align: center;
+            margin-bottom: 5px;
+        }
+        p.subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 0.9em;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        input[type="file"], input[type="number"], select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-family: inherit;
+        }
+        .image-preview {
+            width: 100%;
+            height: 250px;
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 10px;
+            overflow: hidden;
+            background-color: #f9f9f9;
+        }
+        .image-preview img {
+            max-width: 100%;
+            max-height: 100%;
+            display: none;
+        }
+        button {
+            width: 100%;
+            padding: 15px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: var(--primary-dark);
+        }
+        button:disabled {
+            background-color: #999;
+            cursor: not-allowed;
+        }
+        #resultBox {
+            margin-top: 25px;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.2em;
+            display: none;
+        }
+        .loading {
+            text-align: center;
+            display: none;
+            margin-top: 15px;
+            color: var(--primary);
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Diagnomass Derma-Vision</h1>
+    <p class="subtitle">Dual-Stream AI Lesion Analysis</p>
+
+    <div class="form-group">
+        <label for="imageInput">Upload Dermoscopic Image</label>
+        <input type="file" id="imageInput" accept="image/png, image/jpeg" onchange="previewImage()">
+        <div class="image-preview" id="previewContainer">
+            <span id="previewText">No image selected</span>
+            <img id="imagePreview" src="" alt="Preview">
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="ageInput">Patient Age</label>
+        <input type="number" id="ageInput" value="50" min="0" max="120">
+    </div>
+
+    <div class="form-group" style="display: flex; gap: 15px;">
+        <div style="flex: 1;">
+            <label for="sexInput">Biological Sex</label>
+            <select id="sexInput">
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+            </select>
+        </div>
+        <div style="flex: 1;">
+            <label for="siteInput">Anatomical Site</label>
+            <select id="siteInput">
+                <option value="Head/Neck">Head/Neck</option>
+                <option value="Lower Extremity">Lower Extremity</option>
+                <option value="Oral/Genital">Oral/Genital</option>
+                <option value="Palms/Soles">Palms/Soles</option>
+                <option value="Torso" selected>Torso</option>
+                <option value="Upper Extremity">Upper Extremity</option>
+            </select>
+        </div>
+    </div>
+
+    <button id="submitBtn" onclick="runAnalysis()">Run Diagnosis</button>
+    <div class="loading" id="loadingText">Processing via EfficientNet-B7... Please wait.</div>
+    
+    <div id="resultBox"></div>
+</div>
+
+<script>
+    let base64ImageData = null;
+
+    function previewImage() {
+        const fileInput = document.getElementById('imageInput');
+        const preview = document.getElementById('imagePreview');
+        const previewText = document.getElementById('previewText');
+        
+        const file = fileInput.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                base64ImageData = e.target.result; // Save the base64 string for the API
+                preview.style.display = 'block';
+                previewText.style.display = 'none';
+            }
+            reader.readAsDataURL(file);
+        }
+    }
+
+    async function runAnalysis() {
+        if (!base64ImageData) {
+            alert("Please upload an image first.");
+            return;
+        }
+
+        const age = parseFloat(document.getElementById('ageInput').value);
+        const sex = document.getElementById('sexInput').value;
+        const site = document.getElementById('siteInput').value;
+
+        const submitBtn = document.getElementById('submitBtn');
+        const loadingText = document.getElementById('loadingText');
+        const resultBox = document.getElementById('resultBox');
+
+        // UI Updates
+        submitBtn.disabled = true;
+        loadingText.style.display = 'block';
+        resultBox.style.display = 'none';
+
+        // ⚠️ REPLACE THIS URL WITH YOUR HUGGING FACE RUN/PREDICT ENDPOINT
+        const apiUrl = "https://SOU-mya/Derma-Vision.hf.space/run/predict";
+
+        const payload = {
+            data: [
+                base64ImageData,
+                age,
+                sex,
+                site
+            ]
+        };
+
+        try {
+            const response = await fetch(apiUrl, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                throw new Error(`Server responded with status: ${response.status}`);
+            }
+
+            const jsonResponse = await response.json();
+            
+            // Gradio returns the output string in the data array
+            const diagnosis = jsonResponse.data[0]; 
+
+            resultBox.innerText = diagnosis;
+            resultBox.style.display = 'block';
+            
+            // Styling based on result
+            if(diagnosis.includes('Malignant')) {
+                resultBox.style.backgroundColor = '#ffebee';
+                resultBox.style.color = '#c62828';
+                resultBox.style.border = '1px solid #ef9a9a';
+            } else {
+                resultBox.style.backgroundColor = '#e0f2f1';
+                resultBox.style.color = '#00695c';
+                resultBox.style.border = '1px solid #80cbc4';
+            }
+
+        } catch (error) {
+            console.error(error);
+            resultBox.innerText = "Connection Error. Please ensure the backend is active.";
+            resultBox.style.display = 'block';
+            resultBox.style.backgroundColor = '#fff3e0';
+            resultBox.style.color = '#e65100';
+            resultBox.style.border = '1px solid #ffcc80';
+        } finally {
+            submitBtn.disabled = false;
+            loadingText.style.display = 'none';
+        }
+    }
+</script>
+
+</body>
+</html>
