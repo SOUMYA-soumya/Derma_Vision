@@ -351,10 +351,11 @@
         © Diagnomass. For research and demonstration purposes only. Not a substitute for professional medical advice or biopsy.
     </div>
 
-    <script>
-        let base64ImageData = null;
+    <script type="module">
+        import { Client } from "https://cdn.jsdelivr.net/npm/@gradio/client/dist/index.min.js";
 
-        function previewImage() {
+        // Attached to window so the HTML button can find it
+        window.previewImage = function() {
             const fileInput = document.getElementById('imageInput');
             const preview = document.getElementById('imagePreview');
             const previewText = document.getElementById('previewText');
@@ -364,7 +365,6 @@
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     preview.src = e.target.result;
-                    base64ImageData = e.target.result;
                     preview.style.display = 'block';
                     previewText.style.display = 'none';
                 }
@@ -372,8 +372,11 @@
             }
         }
 
-        async function runAnalysis() {
-            if (!base64ImageData) {
+        window.runAnalysis = async function() {
+            const fileInput = document.getElementById('imageInput');
+            const file = fileInput.files[0]; // Passing the actual file object, not base64
+
+            if (!file) {
                 alert("Please select a dermoscopic image to proceed.");
                 return;
             }
@@ -390,26 +393,19 @@
             loadingText.style.display = 'block';
             resultBox.style.display = 'none';
 
-           
-            const apiUrl = "https://sou-mya-derma-vision.hf.space/predict";
-
-            const payload = {
-                data: [base64ImageData, age, sex, site]
-            };
-
             try {
-                const response = await fetch(apiUrl, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(payload)
+                // Connects securely directly to your Hugging Face Space
+                const client = await Client.connect("SOU-mya/Derma-Vision");
+                
+                // Sends the data in the exact format your Python backend requires
+                const result = await client.predict("/predict", {
+                    image: file,
+                    age: age,
+                    sex: sex,
+                    site: site,
                 });
 
-                if (!response.ok) {
-                    throw new Error(`Server Error: ${response.status}`);
-                }
-
-                const jsonResponse = await response.json();
-                const diagnosis = jsonResponse.data[0]; 
+                const diagnosis = result.data[0]; 
 
                 resultBox.innerText = diagnosis;
                 resultBox.style.display = 'block';
