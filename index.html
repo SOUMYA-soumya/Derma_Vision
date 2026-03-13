@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Diagnomass | Derma-Vision AI</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;800&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary: #0f766e; /* Deep Clinical Teal */
@@ -22,339 +22,322 @@
             color: var(--text-dark);
             margin: 0;
             padding: 0;
-            min-height: 100vh;
-            /* 3D Animated Mesh Gradient Background */
-            background: radial-gradient(at 0% 0%, #ffffff 0px, transparent 50%),
-                        radial-gradient(at 100% 0%, #e0f2fe 0px, transparent 50%),
-                        radial-gradient(at 100% 100%, #ccfbf1 0px, transparent 50%),
-                        radial-gradient(at 0% 100%, #f1f5f9 0px, transparent 50%);
             background-color: var(--bg-base);
-            background-size: 200% 200%;
-            animation: gradientShift 15s ease infinite;
-            display: flex;
-            flex-direction: column;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
         }
 
-        @keyframes gradientShift {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+        /* --- 3D Animated Ambient Background --- */
+        .ambient-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            overflow: hidden;
+            background: #f1f5f9;
+        }
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.6;
+            animation: float 20s infinite ease-in-out alternate;
+        }
+        .orb-1 {
+            width: 500px; height: 500px;
+            background: #ccfbf1;
+            top: -100px; left: -100px;
+        }
+        .orb-2 {
+            width: 600px; height: 600px;
+            background: #e0f2fe;
+            bottom: -200px; right: -100px;
+            animation-delay: -5s;
+        }
+        .orb-3 {
+            width: 400px; height: 400px;
+            background: #f0fdf4;
+            top: 40%; left: 30%;
+            animation-delay: -10s;
+        }
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(100px, 50px) scale(1.1); }
         }
 
+        /* --- Header --- */
         header {
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(12px);
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
             padding: 20px 50px;
-            border-bottom: 1px solid rgba(0,0,0,0.05);
+            border-bottom: 1px solid rgba(255,255,255,0.5);
             display: flex;
             justify-content: space-between;
             align-items: center;
             position: sticky;
             top: 0;
             z-index: 100;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
         }
-
         header h1 {
             margin: 0;
-            font-size: 1.5rem;
+            font-size: 1.6rem;
             font-weight: 800;
+            letter-spacing: -0.5px;
             background: linear-gradient(135deg, var(--primary), var(--accent));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
-        .main-layout {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 40px;
-            max-width: 1400px;
+        /* --- Main Container --- */
+        .container {
+            max-width: 1200px;
             margin: 40px auto;
-            padding: 0 40px;
-            flex: 1;
+            padding: 0 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
         }
 
-        /* 3D Glassmorphism Cards */
+        /* --- 3D Glassmorphism Cards --- */
         .card {
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 1);
-            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            border-radius: 24px;
             padding: 40px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08), 
-                        inset 0 1px 0 rgba(255, 255, 255, 1);
-            transition: transform 0.3s ease;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08), 
+                        inset 0 1px 0 rgba(255, 255, 255, 0.9);
         }
 
-        .card:hover {
-            transform: translateY(-5px);
-        }
-
-        /* Typography & Info Layout */
-        h2 {
-            font-size: 1.8rem;
-            color: var(--text-dark);
-            margin-top: 0;
-        }
-
-        h3 {
-            font-size: 1.2rem;
-            color: var(--primary);
-            margin-bottom: 10px;
-            border-bottom: 2px solid #e2e8f0;
-            padding-bottom: 5px;
-        }
-
-        p {
-            line-height: 1.6;
-            color: var(--text-muted);
-        }
-
-        .metrics-grid {
+        /* --- Grid Layouts --- */
+        .dashboard-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-top: 20px;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 40px;
+        }
+        @media (max-width: 968px) {
+            .dashboard-grid { grid-template-columns: 1fr; }
         }
 
-        .metric-box {
-            background: white;
-            padding: 15px;
-            border-radius: 12px;
-            text-align: center;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
-            border: 1px solid #f1f5f9;
-        }
+        h2 { font-size: 1.8rem; margin-top: 0; color: var(--text-dark); }
+        h3 { font-size: 1.2rem; color: var(--primary); border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; margin-top: 30px; }
+        p { line-height: 1.7; color: var(--text-muted); }
 
-        .metric-value {
-            font-size: 1.8rem;
-            font-weight: 800;
-            color: var(--primary);
-        }
-
-        .metric-label {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-top: 5px;
-        }
-
-        /* Diagnostic Form Styles */
-        .form-group {
-            margin-bottom: 24px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: var(--text-dark);
-            font-size: 0.95rem;
-        }
-
+        /* --- Diagnostic Form --- */
+        .form-group { margin-bottom: 24px; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 0.95rem; }
         input[type="file"], input[type="number"], select {
-            width: 100%;
-            padding: 12px 16px;
-            border: 2px solid #e2e8f0;
-            border-radius: 10px;
-            background-color: white;
-            font-family: inherit;
-            font-size: 1rem;
-            transition: border-color 0.2s;
+            width: 100%; padding: 14px 16px; border: 2px solid #e2e8f0; border-radius: 12px;
+            background-color: rgba(255,255,255,0.8); font-family: inherit; font-size: 1rem;
+            transition: all 0.3s; box-sizing: border-box;
         }
-
-        input:focus, select:focus {
-            outline: none;
-            border-color: var(--primary-light);
-        }
-
+        input:focus, select:focus { outline: none; border-color: var(--primary-light); box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.1); }
+        
         .image-preview {
-            width: 100%;
-            height: 280px;
-            border: 2px dashed #cbd5e1;
-            border-radius: 12px;
+            width: 100%; height: 280px; border: 2px dashed #cbd5e1; border-radius: 16px;
+            display: flex; align-items: center; justify-content: center; margin-top: 12px;
+            background-color: rgba(255,255,255,0.4); overflow: hidden; position: relative;
+        }
+        .image-preview img { max-width: 100%; max-height: 100%; object-fit: contain; display: none; }
+        
+        button {
+            width: 100%; padding: 18px; background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white; border: none; border-radius: 12px; font-size: 1.1rem; font-weight: 800;
+            cursor: pointer; box-shadow: 0 10px 25px rgba(15, 118, 110, 0.25); transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+        button:hover { box-shadow: 0 15px 35px rgba(15, 118, 110, 0.35); transform: translateY(-2px); }
+        button:disabled { background: #cbd5e1; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        .loader { display: none; text-align: center; margin-top: 20px; color: var(--primary); font-weight: 600; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
+
+        #resultBox {
+            margin-top: 25px; padding: 20px; border-radius: 16px; text-align: center;
+            font-weight: 800; font-size: 1.3rem; display: none; animation: slideUp 0.4s ease-out;
+        }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- Anatomical Map Section --- */
+        .anatomy-section {
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-top: 12px;
-            background-color: rgba(255,255,255,0.5);
-            overflow: hidden;
+            gap: 40px;
+            background: linear-gradient(to right, rgba(255,255,255,0.5), rgba(224, 242, 254, 0.3));
+        }
+        .anatomy-wrapper {
             position: relative;
+            height: 400px;
+            width: 200px;
+        }
+        /* Sleek CSS Silhouette */
+        .silhouette {
+            width: 100%; height: 100%;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 500"><path fill="%23cbd5e1" d="M100 20c-15 0-25 12-25 28s10 28 25 28 25-12 25-28-10-28-25-28zm-35 65c-15 0-25 10-25 25v120c0 10 15 10 15 0v-100h10v200c0 15 20 15 20 0v-120h10v120c0 15 20 15 20 0V110h10v100c0 10 15 10 15 0v-120c0-15-10-25-25-25H65z"/></svg>') no-repeat center center;
+            background-size: contain;
+            opacity: 0.7;
+        }
+        /* Pulsing Nodes */
+        .node {
+            position: absolute; width: 14px; height: 14px; background: var(--accent);
+            border-radius: 50%; box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.7);
+            animation: pulse-node 2s infinite; cursor: pointer;
+        }
+        .node::after {
+            content: attr(data-label);
+            position: absolute; left: 25px; top: -5px; background: white; padding: 4px 10px;
+            border-radius: 6px; font-size: 0.8rem; font-weight: 600; color: var(--text-dark);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1); white-space: nowrap; pointer-events: none;
+        }
+        .node-head { top: 12%; left: 47%; }
+        .node-torso { top: 35%; left: 47%; }
+        .node-upper { top: 30%; left: 20%; }
+        .node-lower { top: 70%; left: 35%; }
+        
+        @keyframes pulse-node {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(14, 165, 233, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(14, 165, 233, 0); }
         }
 
-        .image-preview img {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-            display: none;
-        }
+        .anatomy-text { flex: 1; }
 
-        button {
-            width: 100%;
-            padding: 16px;
-            background: linear-gradient(135deg, var(--primary), var(--primary-light));
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-size: 1.1rem;
-            font-weight: 800;
-            cursor: pointer;
-            box-shadow: 0 10px 20px rgba(15, 118, 110, 0.2);
-            transition: all 0.3s ease;
-        }
+        /* --- Performance Bars Section --- */
+        .performance-grid { margin-top: 30px; display: grid; gap: 20px; }
+        .bar-container { width: 100%; background: #e2e8f0; border-radius: 10px; height: 24px; position: relative; overflow: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); }
+        .bar-fill { height: 100%; background: linear-gradient(90deg, var(--primary), var(--primary-light)); border-radius: 10px; width: 0; /* Animated via JS */ transition: width 1.5s cubic-bezier(0.22, 1, 0.36, 1); }
+        .bar-label { display: flex; justify-content: space-between; margin-bottom: 8px; font-weight: 600; font-size: 0.95rem; }
+        .bar-percent { font-weight: 800; color: var(--primary); }
 
-        button:hover {
-            box-shadow: 0 15px 25px rgba(15, 118, 110, 0.3);
-            transform: translateY(-2px);
-        }
-
-        button:disabled {
-            background: #cbd5e1;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-
-        .loader {
-            display: none;
-            text-align: center;
-            margin-top: 20px;
-            color: var(--primary);
-            font-weight: 600;
-            animation: pulse 1.5s infinite;
-        }
-
-        @keyframes pulse {
-            0% { opacity: 0.6; }
-            50% { opacity: 1; }
-            100% { opacity: 0.6; }
-        }
-
-        #resultBox {
-            margin-top: 25px;
-            padding: 20px;
-            border-radius: 12px;
-            text-align: center;
-            font-weight: 800;
-            font-size: 1.3rem;
-            display: none;
-            animation: slideUp 0.4s ease-out;
-        }
-
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .disclaimer {
-            text-align: center;
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            margin-top: 40px;
-            padding-bottom: 20px;
-        }
-
-        /* Responsive Design */
-        @media (max-width: 968px) {
-            .main-layout {
-                grid-template-columns: 1fr;
-            }
-        }
+        .footer { text-align: center; margin: 40px 0; font-size: 0.85rem; color: var(--text-muted); }
     </style>
 </head>
 <body>
 
-    <header>
-        <h1>DIAGNOMASS</h1>
-        <div style="font-weight: 600; color: var(--text-muted);">Derma-Vision AI Module</div>
-    </header>
-
-    <div class="main-layout">
-        
-        <div class="card info-section">
-            <h2>The Science of Detection</h2>
-            <p>Melanoma is the most serious type of skin cancer, developing in the cells (melanocytes) that produce melanin. Early detection is paramount; when identified in its localized stages, the 5-year survival rate exceeds 99%. Derma-Vision serves as an advanced computational second-opinion for dermatological analysis.</p>
-
-            <h3>Core Architecture</h3>
-            <p>Derma-Vision utilizes a sophisticated <strong>Dual-Stream EfficientNet-B7</strong> ensemble. It does not merely look at a standard photograph. The network simultaneously processes raw RGB pixels alongside offline-computed <strong>CTE Maps</strong> (Color, Texture, and Edge saturation), fusing visual patterns with strict mathematical boundaries.</p>
-
-            <h3>Clinical Efficacy Metrics</h3>
-            <p style="font-size: 0.9rem;">Model evaluated on a strict 1:1 augmented and anatomically stratified test set using Focal Loss for hard-example penalization.</p>
-            <div class="metrics-grid">
-                <div class="metric-box">
-                    <div class="metric-value">0.9941</div>
-                    <div class="metric-label">Validation AUC</div>
-                </div>
-                <div class="metric-box">
-                    <div class="metric-value">0.9659</div>
-                    <div class="metric-label">F1-Score</div>
-                </div>
-                <div class="metric-box">
-                    <div class="metric-value">Dual</div>
-                    <div class="metric-label">Stream Late-Fusion</div>
-                </div>
-                <div class="metric-box">
-                    <div class="metric-value">3x</div>
-                    <div class="metric-label">Test-Time Augmentation</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="card tool-section">
-            <h2>Initiate Diagnosis</h2>
-            <p style="margin-top: -10px; margin-bottom: 25px;">Input clinical data to run a localized inference pass.</p>
-
-            <div class="form-group">
-                <label for="imageInput">Dermoscopic Image Acquisition</label>
-                <input type="file" id="imageInput" accept="image/png, image/jpeg" onchange="previewImage()">
-                <div class="image-preview" id="previewContainer">
-                    <span id="previewText" style="color: #94a3b8; font-weight: 500;">Awaiting image upload...</span>
-                    <img id="imagePreview" src="" alt="Lesion Preview">
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label for="ageInput">Patient Age</label>
-                <input type="number" id="ageInput" value="50" min="0" max="120">
-            </div>
-
-            <div class="form-group" style="display: flex; gap: 20px;">
-                <div style="flex: 1;">
-                    <label for="sexInput">Biological Sex</label>
-                    <select id="sexInput">
-                        <option value="Male">Male</option>
-                        <option value="Female">Female</option>
-                    </select>
-                </div>
-                <div style="flex: 1;">
-                    <label for="siteInput">Anatomical Site</label>
-                    <select id="siteInput">
-                        <option value="Head/Neck">Head/Neck</option>
-                        <option value="Lower Extremity">Lower Extremity</option>
-                        <option value="Oral/Genital">Oral/Genital</option>
-                        <option value="Palms/Soles">Palms/Soles</option>
-                        <option value="Torso" selected>Torso</option>
-                        <option value="Upper Extremity">Upper Extremity</option>
-                    </select>
-                </div>
-            </div>
-
-            <button id="submitBtn" onclick="runAnalysis()">Compute Inference</button>
-            <div class="loader" id="loadingText">Executing Multi-Model Ensemble...</div>
-            
-            <div id="resultBox"></div>
-        </div>
-
+    <div class="ambient-bg">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
     </div>
 
-    <div class="disclaimer">
-        © Diagnomass. For research and demonstration purposes only. Not a substitute for professional medical advice or biopsy.
+    <header>
+        <h1>DIAGNOMASS</h1>
+        <div style="font-weight: 600; color: var(--primary); font-size: 0.9rem; letter-spacing: 1px;">DERMA-VISION AI</div>
+    </header>
+
+    <div class="container">
+        
+        <div class="dashboard-grid">
+            
+            <div class="card">
+                <h2>Diagnostic Console</h2>
+                <p style="margin-top: -10px; margin-bottom: 30px;">Initialize image payload and patient metadata.</p>
+
+                <div class="form-group">
+                    <label for="imageInput">High-Resolution Dermoscopic Image</label>
+                    <input type="file" id="imageInput" accept="image/png, image/jpeg" onchange="previewImage()">
+                    <div class="image-preview" id="previewContainer">
+                        <span id="previewText" style="color: #94a3b8; font-weight: 500;">Click "Choose File" to scan</span>
+                        <img id="imagePreview" src="" alt="Lesion Preview">
+                    </div>
+                </div>
+
+                <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div>
+                        <label for="ageInput">Patient Age</label>
+                        <input type="number" id="ageInput" value="50" min="0" max="120">
+                    </div>
+                    <div>
+                        <label for="sexInput">Biological Sex</label>
+                        <select id="sexInput">
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="siteInput">Localized Anatomical Site</label>
+                    <select id="siteInput">
+                        <option value="Head/Neck">Head/Neck</option>
+                        <option value="Lower Extremity">Lower Extremity (Legs)</option>
+                        <option value="Oral/Genital">Oral/Genital</option>
+                        <option value="Palms/Soles">Palms/Soles</option>
+                        <option value="Torso" selected>Torso (Chest/Back/Abdomen)</option>
+                        <option value="Upper Extremity">Upper Extremity (Arms)</option>
+                    </select>
+                </div>
+
+                <button id="submitBtn" onclick="runAnalysis()">Initiate AI Analysis</button>
+                <div class="loader" id="loadingText">Fusing visual and tabular networks...</div>
+                
+                <div id="resultBox"></div>
+            </div>
+
+            <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <h2>Clinical Intelligence</h2>
+                    <p>Derma-Vision utilizes a sophisticated <strong>Dual-Stream EfficientNet-B7</strong> architecture. Unlike standard classifiers, our network simultaneously processes raw RGB pixels alongside offline-computed <strong>CTE Maps</strong> (Color, Texture, and Edge saturation), fusing natural visual patterns with strict mathematical gradients.</p>
+                </div>
+
+                <div>
+                    <h3>Model Performance Metrics</h3>
+                    <p style="font-size: 0.85rem; margin-top: -5px;">Validated on an anatomically stratified test set.</p>
+                    
+                    <div class="performance-grid">
+                        <div>
+                            <div class="bar-label"><span>Validation AUC</span> <span class="bar-percent">0.9941</span></div>
+                            <div class="bar-container"><div class="bar-fill" style="width: 99.41%"></div></div>
+                        </div>
+                        <div>
+                            <div class="bar-label"><span>F1-Score (Accuracy)</span> <span class="bar-percent">0.9659</span></div>
+                            <div class="bar-container"><div class="bar-fill" style="width: 96.59%"></div></div>
+                        </div>
+                        <div>
+                            <div class="bar-label"><span>Clinical Recall (Sensitivity)</span> <span class="bar-percent">0.9780</span></div>
+                            <div class="bar-container"><div class="bar-fill" style="width: 97.80%"></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="card anatomy-section">
+            <div class="anatomy-text">
+                <h2>Spatial Feature Localization</h2>
+                <p>Malignancy probabilities shift significantly based on the anatomical origin of the lesion. Derma-Vision utilizes a custom Tabular Multi-Layer Perceptron (MLP) to weigh the visual inference against geographical prior probabilities.</p>
+                <ul style="color: var(--text-muted); line-height: 1.8; font-weight: 500;">
+                    <li><strong>Head & Neck:</strong> High sun exposure, distinct texture.</li>
+                    <li><strong>Torso:</strong> Largest surface area, common for nodular variants.</li>
+                    <li><strong>Extremities:</strong> Arms (Upper) and Legs (Lower).</li>
+                    <li><strong>Acral Regions:</strong> Palms & Soles (distinct ridge patterns).</li>
+                </ul>
+            </div>
+            <div class="anatomy-wrapper">
+                <div class="silhouette"></div>
+                <div class="node node-head" data-label="Head / Neck"></div>
+                <div class="node node-upper" data-label="Upper Extremity"></div>
+                <div class="node node-torso" data-label="Torso"></div>
+                <div class="node node-lower" data-label="Lower Extremity"></div>
+            </div>
+        </div>
+
+        <div class="footer">
+            © 2026 Diagnomass | System architecture designed for research and educational demonstration. Not a substitute for biopsy.
+        </div>
+
     </div>
 
     <script type="module">
         import { Client } from "https://cdn.jsdelivr.net/npm/@gradio/client/dist/index.min.js";
 
-        // Attached to window so the HTML button can find it
         window.previewImage = function() {
             const fileInput = document.getElementById('imageInput');
             const preview = document.getElementById('imagePreview');
@@ -374,16 +357,21 @@
 
         window.runAnalysis = async function() {
             const fileInput = document.getElementById('imageInput');
-            const file = fileInput.files[0]; // Passing the actual file object, not base64
+            const file = fileInput.files[0]; 
 
             if (!file) {
-                alert("Please select a dermoscopic image to proceed.");
+                alert("Please attach a dermoscopic image to proceed.");
                 return;
             }
 
             const age = parseFloat(document.getElementById('ageInput').value);
             const sex = document.getElementById('sexInput').value;
-            const site = document.getElementById('siteInput').value;
+            let site = document.getElementById('siteInput').value;
+            
+            // Clean up the site string if it contains the explanatory parentheses
+            if (site.includes('Torso')) site = 'Torso';
+            if (site.includes('Upper')) site = 'Upper Extremity';
+            if (site.includes('Lower')) site = 'Lower Extremity';
 
             const submitBtn = document.getElementById('submitBtn');
             const loadingText = document.getElementById('loadingText');
@@ -394,10 +382,9 @@
             resultBox.style.display = 'none';
 
             try {
-                // Connects securely directly to your Hugging Face Space
-                const client = await Client.connect("SOU-mya/Derma-Vision");
+                // Official Gradio WebSocket connection
+                const client = await Client.connect("sou-mya-derma-vision");
                 
-                // Sends the data in the exact format your Python backend requires
                 const result = await client.predict("/predict", {
                     image: file,
                     age: age,
@@ -410,12 +397,13 @@
                 resultBox.innerText = diagnosis;
                 resultBox.style.display = 'block';
                 
+                // Dynamic styling based on AI inference
                 if(diagnosis.includes('Malignant')) {
-                    resultBox.style.backgroundColor = '#fff1f2';
+                    resultBox.style.backgroundColor = 'rgba(254, 226, 226, 0.8)';
                     resultBox.style.color = '#be123c';
                     resultBox.style.border = '2px solid #fda4af';
                 } else {
-                    resultBox.style.backgroundColor = '#ecfdf5';
+                    resultBox.style.backgroundColor = 'rgba(209, 250, 229, 0.8)';
                     resultBox.style.color = '#047857';
                     resultBox.style.border = '2px solid #6ee7b7';
                 }
@@ -424,13 +412,26 @@
                 console.error(error);
                 resultBox.innerText = "Connection Error. The inference server is unreachable or sleeping.";
                 resultBox.style.display = 'block';
-                resultBox.style.backgroundColor = '#fffbeb';
+                resultBox.style.backgroundColor = 'rgba(254, 243, 199, 0.8)';
                 resultBox.style.color = '#b45309';
                 resultBox.style.border = '2px solid #fcd34d';
             } finally {
                 submitBtn.disabled = false;
                 loadingText.style.display = 'none';
             }
+        }
+
+        // Animate performance bars on load
+        window.onload = function() {
+            setTimeout(() => {
+                const bars = document.querySelectorAll('.bar-fill');
+                // The widths are already set inline, setting them triggers the CSS transition
+                bars.forEach(bar => {
+                    const targetWidth = bar.style.width;
+                    bar.style.width = '0';
+                    setTimeout(() => { bar.style.width = targetWidth; }, 100);
+                });
+            }, 500);
         }
     </script>
 </body>
