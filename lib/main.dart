@@ -69,7 +69,7 @@ class _DermaVisionScreenState extends State<DermaVisionScreen> {
 
     try {
       // ⚠️ REPLACE WITH YOUR ACTUAL HUGGING FACE API URL
-      final targetUrl ='https://SOU-mya/Derma-Vision/api/predict');
+      final targetUrl ='https://SOU-mya/Derma-Vision/run/predict');
       final uri = Uri.parse('https://corsproxy.io/?' + Uri.encodeComponent(targetUrl));
       
       String base64Image = "data:image/jpeg;base64,${base64Encode(_webImage!)}";
