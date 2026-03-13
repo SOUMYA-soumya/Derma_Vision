@@ -390,9 +390,8 @@
             loadingText.style.display = 'block';
             resultBox.style.display = 'none';
 
-            // ⚠️ CRITICAL API URL FIX: Hugging Face space URLs use hyphens, not slashes or capital letters.
-            // Replace 'YOUR_USERNAME' with your actual Hugging Face username in lowercase.
-            const apiUrl = "https://your_username-derma-vision.hf.space/run/predict";
+           
+            const apiUrl = "https://sou-mya-derma-vision.hf.space/run/predict";
 
             const payload = {
                 data: [base64ImageData, age, sex, site]
