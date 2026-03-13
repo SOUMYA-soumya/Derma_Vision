@@ -367,7 +367,6 @@
 </head>
 <body>
 
-    <!-- ===== DISCLAIMER MODAL ===== -->
     <div class="modal-overlay" id="disclaimerModal">
         <div class="modal-box">
             <div class="modal-icon">⚠️</div>
@@ -382,14 +381,12 @@
         </div>
     </div>
 
-    <!-- ===== AMBIENT BACKGROUND ===== -->
     <div class="ambient-bg">
         <div class="orb orb-1"></div>
         <div class="orb orb-2"></div>
         <div class="orb orb-3"></div>
     </div>
 
-    <!-- ===== HEADER ===== -->
     <header>
         <div class="header-brand">
             <div class="header-logo">D</div>
@@ -401,18 +398,14 @@
         </div>
     </header>
 
-    <!-- ===== MAIN CONTENT ===== -->
     <div class="container">
 
-        <!-- Row 1: Input + Intelligence -->
         <div class="dashboard-grid">
 
-            <!-- LEFT: Diagnostic Console -->
             <div class="card">
                 <h2>Diagnostic Console</h2>
                 <p style="margin-bottom: 20px;">Upload a dermoscopic scan and initialize patient metadata.</p>
 
-                <!-- Drag & Drop Zone -->
                 <div class="form-group">
                     <label>High-Resolution Dermoscopic Image</label>
                     <div class="drop-zone" id="dropZone">
@@ -424,7 +417,6 @@
                     </div>
                 </div>
 
-                <!-- CTE Side-by-Side Preview -->
                 <div class="preview-grid" id="ctePreview" style="display:none;">
                     <div class="preview-panel">
                         <img id="rgbPreviewImg" src="" alt="RGB">
@@ -436,7 +428,6 @@
                     </div>
                 </div>
 
-                <!-- Metadata -->
                 <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
                     <div>
                         <label for="ageInput">Patient Age</label>
@@ -450,22 +441,22 @@
                         </select>
                     </div>
                 </div>
+                
                 <div class="form-group">
                     <label for="siteInput">Localized Anatomical Site</label>
                     <select id="siteInput">
-                        <option value="head/neck">Head/Neck</option>
-                        <option value="lower extremity">Lower Extremity (Legs)</option>
-                        <option value="oral/genital">Oral/Genital</option>
-                        <option value="palms/soles">Palms/Soles</option>
-                        <option value="torso" selected>Torso (Chest/Back/Abdomen)</option>
-                        <option value="upper extremity">Upper Extremity (Arms)</option>
+                        <option value="Head/Neck">Head/Neck</option>
+                        <option value="Lower Extremity">Lower Extremity (Legs)</option>
+                        <option value="Oral/Genital">Oral/Genital</option>
+                        <option value="Palms/Soles">Palms/Soles</option>
+                        <option value="Torso" selected>Torso (Chest/Back/Abdomen)</option>
+                        <option value="Upper Extremity">Upper Extremity (Arms)</option>
                     </select>
                 </div>
 
                 <button class="btn-primary" id="submitBtn" onclick="runAnalysis()">⚡ Initiate AI Analysis</button>
                 <div class="loader" id="loadingText">Fusing dual-stream visual and tabular networks...</div>
 
-                <!-- Confidence Gauge Result -->
                 <div id="resultBox">
                     <div class="gauge-wrapper" id="gaugeWrapper">
                         <svg class="gauge-svg" viewBox="0 0 200 110">
@@ -481,13 +472,11 @@
                 </div>
             </div>
 
-            <!-- RIGHT: Clinical Intelligence -->
             <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
                 <div>
                     <h2>Clinical Intelligence</h2>
                     <p>Derma-Vision utilizes a <strong>Dual-Stream EfficientNet-B7</strong> ensemble. Unlike standard classifiers, our network simultaneously processes raw RGB pixels alongside offline-computed <strong>CTE Maps</strong> (Color, Texture, and Edge saturation), fusing natural visual patterns with strict mathematical gradients.</p>
 
-                    <!-- Architecture Diagram -->
                     <h3>Neural Architecture</h3>
                     <div class="arch-diagram">
                         <div class="arch-node arch-input">📷 Input<br>Image</div>
@@ -526,7 +515,6 @@
             </div>
         </div>
 
-        <!-- Row 2: Anatomy Section -->
         <div class="card anatomy-section">
             <div class="anatomy-text">
                 <h2>Spatial Feature Localization</h2>
@@ -547,7 +535,6 @@
             </div>
         </div>
 
-        <!-- Row 3: Scan History Log -->
         <div class="card history-section">
             <div class="history-header">
                 <h2>Scan History</h2>
@@ -563,7 +550,6 @@
         </div>
     </div>
 
-    <!-- ===== SCRIPTS ===== -->
     <script type="module">
         import { Client } from "https://cdn.jsdelivr.net/npm/@gradio/client/dist/index.min.js";
 
@@ -599,7 +585,7 @@
 
         dropZone.addEventListener('click', () => fileInput.click());
         dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); });
-        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'); });
         dropZone.addEventListener('drop', (e) => {
             e.preventDefault(); dropZone.classList.remove('drag-over');
             if (e.dataTransfer.files.length) { fileInput.files = e.dataTransfer.files; handleFile(e.dataTransfer.files[0]); }
@@ -630,7 +616,6 @@
                 ctx.drawImage(img, 0, 0);
                 const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                 const data = imageData.data;
-                // Simulate CTE: Luminance + Edge + Saturation
                 const grayscale = new Float32Array(canvas.width * canvas.height);
                 for (let i = 0; i < data.length; i += 4) {
                     const r = data[i], g = data[i+1], b = data[i+2];
@@ -661,9 +646,10 @@
         // --- Main Analysis ---
         window.runAnalysis = async function() {
             if (!currentFile) { alert("Please attach a dermoscopic image to proceed."); return; }
+            
             const age = parseFloat(document.getElementById('ageInput').value);
             const sex = document.getElementById('sexInput').value;
-            let site = document.getElementById('siteInput').value;
+            const site = document.getElementById('siteInput').value; // Now strictly pulls capitalized value from HTML
 
             const submitBtn = document.getElementById('submitBtn');
             const loadingText = document.getElementById('loadingText');
@@ -675,14 +661,20 @@
 
             try {
                 const client = await Client.connect("SOU-mya/Derma-Vision");
-                const result = await client.predict("/predict", {
-                    image: currentFile, age: age, sex: sex, site: site,
-                });
+                
+                // CRITICAL FIX: Sending data as a positional array to bypass dict mapping errors
+                const result = await client.predict("/predict", [
+                    currentFile,
+                    age,
+                    sex,
+                    site
+                ]);
+
                 const diagnosis = result.data[0];
                 parseDiagnosis(diagnosis);
             } catch (error) {
-                console.error(error);
-                showError("Connection Error. The inference server is unreachable or sleeping.");
+                console.error("Diagnosis Error Caught:", error);
+                showError("Server Error. The Python script crashed or the server timed out. Check the browser console (F12) for logs.");
             } finally {
                 submitBtn.disabled = false;
                 loadingText.style.display = 'none';
@@ -691,7 +683,6 @@
 
         function parseDiagnosis(rawText) {
             const isMalignant = rawText.toLowerCase().includes('malignant');
-            // Try to extract a confidence number from the response
             const numMatch = rawText.match(/([\d.]+)\s*%/);
             let confidence = numMatch ? parseFloat(numMatch[1]) : (isMalignant ? 87.5 : 12.5);
             if (confidence > 100) confidence = 99;
@@ -704,7 +695,6 @@
             const confText = document.getElementById('confidenceText');
             const resultBox = document.getElementById('resultBox');
 
-            // Color scheme
             const color = isMalignant ? '#e11d48' : '#059669';
             const bgColor = isMalignant ? 'var(--danger-bg)' : 'var(--success-bg)';
             const borderColor = isMalignant ? 'var(--danger-border)' : 'var(--success-border)';
@@ -715,7 +705,6 @@
             diagText.style.color = color;
             confText.textContent = `AI Confidence: ${confidence.toFixed(1)}%`;
 
-            // Animate gauge arc
             const arc = document.getElementById('gaugeArc');
             arc.style.stroke = color;
             const totalLength = 251.33;
