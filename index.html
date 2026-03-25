@@ -660,7 +660,7 @@
             resultBox.style.display = 'none';
 
             try {
-                const client = await Client.connect("SOU-mya/Derma-Vision");
+                const client = await Client.connect("developer-SOUMYA/Derma-Vision");
                 
                 // CRITICAL FIX: Sending data as a positional array to bypass dict mapping errors
                 const result = await client.predict("/predict", [
