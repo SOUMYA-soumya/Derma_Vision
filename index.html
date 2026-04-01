@@ -1,372 +1,694 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Diagnomass | Derma-Vision AI</title>
     <meta name="description" content="AI-powered melanoma detection using Dual-Stream EfficientNet-B7 ensemble with 99.41% AUC. Research demonstration tool.">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
     <style>
         /* ========== DESIGN TOKENS ========== */
         :root {
-            --primary: #0f766e;
-            --primary-light: #14b8a6;
-            --primary-ultra-light: #ccfbf1;
-            --accent: #0ea5e9;
-            --accent-light: #e0f2fe;
-            --bg-base: #f8fafc;
-            --bg-card: rgba(255, 255, 255, 0.65);
-            --bg-card-hover: rgba(255, 255, 255, 0.8);
-            --text-dark: #0f172a;
-            --text-muted: #64748b;
-            --text-light: #94a3b8;
-            --border-card: rgba(255, 255, 255, 0.8);
-            --border-input: #e2e8f0;
-            --danger: #e11d48;
-            --danger-bg: rgba(254, 226, 226, 0.8);
-            --danger-border: #fda4af;
-            --success: #059669;
-            --success-bg: rgba(209, 250, 229, 0.8);
-            --success-border: #6ee7b7;
-            --warning-bg: rgba(254, 243, 199, 0.8);
-            --warning-border: #fcd34d;
-            --warning-text: #b45309;
-            --shadow-card: 0 25px 50px -12px rgba(0, 0, 0, 0.08);
-            --shadow-btn: 0 10px 25px rgba(15, 118, 110, 0.25);
-            --orb1: #ccfbf1; --orb2: #e0f2fe; --orb3: #f0fdf4;
-            --ambient-bg: #f1f5f9;
-            --gauge-trail: #e2e8f0;
-            --modal-overlay: rgba(15, 23, 42, 0.6);
+            --primary: #00e5c3;
+            --primary-dim: #00b89c;
+            --primary-glow: rgba(0, 229, 195, 0.18);
+            --primary-glow-strong: rgba(0, 229, 195, 0.35);
+            --accent: #3b8eff;
+            --accent-glow: rgba(59, 142, 255, 0.2);
+            --danger: #ff3d6b;
+            --danger-glow: rgba(255, 61, 107, 0.18);
+            --success: #00e5c3;
+            --success-glow: rgba(0, 229, 195, 0.18);
+            --warning: #ffb443;
+            --bg-void: #050a14;
+            --bg-deep: #080f1e;
+            --bg-surface: #0d1729;
+            --bg-raised: #111f35;
+            --bg-hover: #162540;
+            --border-subtle: rgba(0, 229, 195, 0.08);
+            --border-glow: rgba(0, 229, 195, 0.25);
+            --border-strong: rgba(0, 229, 195, 0.5);
+            --text-primary: #e8f4f2;
+            --text-secondary: #7a9db5;
+            --text-dim: #3d5e74;
+            --text-mono: #00e5c3;
+            --gauge-trail: #1a2d42;
+            --grid-color: rgba(0, 229, 195, 0.04);
+            --scanline-color: rgba(0, 229, 195, 0.015);
         }
 
-        /* ========== DARK MODE ========== */
-        [data-theme="dark"] {
-            --bg-base: #0f172a;
-            --bg-card: rgba(30, 41, 59, 0.7);
-            --bg-card-hover: rgba(30, 41, 59, 0.9);
-            --text-dark: #f1f5f9;
-            --text-muted: #94a3b8;
-            --text-light: #64748b;
-            --border-card: rgba(51, 65, 85, 0.6);
-            --border-input: #334155;
-            --shadow-card: 0 25px 50px -12px rgba(0, 0, 0, 0.3);
-            --orb1: rgba(13, 148, 136, 0.15); --orb2: rgba(14, 165, 233, 0.1); --orb3: rgba(16, 185, 129, 0.1);
-            --ambient-bg: #0f172a;
-            --gauge-trail: #334155;
-            --modal-overlay: rgba(0, 0, 0, 0.75);
+        [data-theme="light"] {
+            --bg-void: #f0f5f7;
+            --bg-deep: #e8f0f4;
+            --bg-surface: #ffffff;
+            --bg-raised: #f5fafa;
+            --bg-hover: #eaf6f4;
+            --border-subtle: rgba(0, 120, 100, 0.1);
+            --border-glow: rgba(0, 150, 120, 0.3);
+            --border-strong: rgba(0, 150, 120, 0.6);
+            --text-primary: #0a1f2e;
+            --text-secondary: #3d7070;
+            --text-dim: #9ab5b5;
+            --text-mono: #007a66;
+            --gauge-trail: #d4eae8;
+            --primary: #007a66;
+            --primary-dim: #006055;
+            --primary-glow: rgba(0, 122, 102, 0.1);
+            --primary-glow-strong: rgba(0, 122, 102, 0.2);
+            --grid-color: rgba(0, 122, 102, 0.04);
+            --scanline-color: rgba(0, 0, 0, 0);
         }
 
-        /* ========== RESET & BASE ========== */
+        /* ========== RESET ========== */
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            font-family: 'Inter', sans-serif;
-            color: var(--text-dark);
-            background-color: var(--bg-base);
+            font-family: 'DM Sans', sans-serif;
+            color: var(--text-primary);
+            background: var(--bg-void);
             overflow-x: hidden;
-            scroll-behavior: smooth;
-            transition: background-color 0.4s, color 0.4s;
+            transition: background 0.4s, color 0.4s;
         }
 
-        /* ========== AMBIENT BACKGROUND ========== */
+        /* ========== SCANLINE + GRID BACKGROUND ========== */
+        body::before {
+            content: '';
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 0; pointer-events: none;
+            background-image:
+                linear-gradient(var(--grid-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+        body::after {
+            content: '';
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 0; pointer-events: none;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                var(--scanline-color) 2px,
+                var(--scanline-color) 4px
+            );
+        }
+
+        /* ========== AMBIENT GLOW ORBS ========== */
         .ambient-bg {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            z-index: -1; overflow: hidden; background: var(--ambient-bg);
-            transition: background 0.4s;
+            z-index: 0; pointer-events: none; overflow: hidden;
         }
         .orb {
-            position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.6;
-            animation: float 20s infinite ease-in-out alternate; transition: background 0.4s;
+            position: absolute; border-radius: 50%; filter: blur(120px); opacity: 0.25;
+            animation: orb-float 25s infinite ease-in-out alternate;
         }
-        .orb-1 { width: 500px; height: 500px; background: var(--orb1); top: -100px; left: -100px; }
-        .orb-2 { width: 600px; height: 600px; background: var(--orb2); bottom: -200px; right: -100px; animation-delay: -5s; }
-        .orb-3 { width: 400px; height: 400px; background: var(--orb3); top: 40%; left: 30%; animation-delay: -10s; }
-        @keyframes float {
+        .orb-1 { width: 600px; height: 600px; background: radial-gradient(circle, #00e5c3, transparent); top: -200px; left: -150px; }
+        .orb-2 { width: 500px; height: 500px; background: radial-gradient(circle, #3b8eff, transparent); bottom: -150px; right: -100px; animation-delay: -8s; }
+        .orb-3 { width: 350px; height: 350px; background: radial-gradient(circle, #00e5c3, transparent); top: 50%; left: 40%; animation-delay: -15s; opacity: 0.1; }
+        @keyframes orb-float {
             0% { transform: translate(0, 0) scale(1); }
-            100% { transform: translate(100px, 50px) scale(1.1); }
+            100% { transform: translate(60px, 40px) scale(1.15); }
         }
 
         /* ========== HEADER ========== */
         header {
-            background: var(--bg-card);
-            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-            padding: 16px 40px;
-            border-bottom: 1px solid var(--border-card);
-            display: flex; justify-content: space-between; align-items: center;
-            position: sticky; top: 0; z-index: 100;
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
-            transition: background 0.4s, border-color 0.4s;
+            position: sticky; top: 0; z-index: 200;
+            background: rgba(5, 10, 20, 0.85);
+            backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+            border-bottom: 1px solid var(--border-subtle);
+            padding: 0 40px;
+            display: flex; align-items: center; justify-content: space-between;
+            height: 64px;
         }
-        .header-brand { display: flex; align-items: center; gap: 12px; }
+        [data-theme="light"] header { background: rgba(240, 245, 247, 0.9); }
+
+        .header-brand { display: flex; align-items: center; gap: 14px; }
         .header-logo {
-            width: 36px; height: 36px; border-radius: 10px;
-            background: linear-gradient(135deg, var(--primary), var(--accent));
+            width: 36px; height: 36px; border-radius: 8px; position: relative;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-glow);
             display: flex; align-items: center; justify-content: center;
-            color: white; font-weight: 800; font-size: 1rem;
+            box-shadow: 0 0 16px var(--primary-glow), inset 0 1px 0 rgba(255,255,255,0.05);
         }
-        header h1 {
-            font-size: 1.5rem; font-weight: 800; letter-spacing: -0.5px;
-            background: linear-gradient(135deg, var(--primary), var(--accent));
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        .header-logo svg { width: 20px; height: 20px; }
+        .brand-name {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.2rem; font-weight: 800; letter-spacing: 3px;
+            color: var(--text-primary); text-transform: uppercase;
         }
-        .header-right { display: flex; align-items: center; gap: 16px; }
-        .header-tag {
-            font-weight: 600; color: var(--primary); font-size: 0.8rem;
-            letter-spacing: 1.5px; text-transform: uppercase;
+        .brand-sub {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.6rem; color: var(--primary); letter-spacing: 2px;
+            text-transform: uppercase; display: block; margin-top: -2px;
         }
 
-        /* --- Dark Mode Toggle --- */
+        .header-center { display: flex; align-items: center; gap: 8px; }
+        .status-dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            background: var(--primary);
+            box-shadow: 0 0 8px var(--primary);
+            animation: status-pulse 2s infinite;
+        }
+        @keyframes status-pulse {
+            0%, 100% { opacity: 1; box-shadow: 0 0 8px var(--primary); }
+            50% { opacity: 0.5; box-shadow: 0 0 4px var(--primary); }
+        }
+        .status-label {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.7rem; color: var(--primary); letter-spacing: 1px;
+        }
+        .status-label span { color: var(--text-secondary); }
+
+        .header-right { display: flex; align-items: center; gap: 20px; }
+        .auc-badge {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.7rem; padding: 5px 12px;
+            border: 1px solid var(--border-glow);
+            border-radius: 4px; color: var(--primary);
+            background: var(--primary-glow); letter-spacing: 1px;
+        }
         .theme-toggle {
-            width: 44px; height: 24px; border-radius: 12px; border: none; cursor: pointer;
-            background: var(--border-input); position: relative; transition: background 0.3s;
+            width: 42px; height: 22px; border-radius: 11px;
+            background: var(--bg-raised); border: 1px solid var(--border-glow);
+            cursor: pointer; position: relative; transition: background 0.3s;
         }
         .theme-toggle::after {
-            content: '☀️'; position: absolute; top: 2px; left: 2px;
-            width: 20px; height: 20px; border-radius: 50%;
-            background: white; display: flex; align-items: center; justify-content: center;
-            font-size: 12px; transition: transform 0.3s, content 0.3s;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+            content: ''; position: absolute; top: 3px; left: 3px;
+            width: 16px; height: 16px; border-radius: 50%;
+            background: var(--primary); transition: transform 0.3s;
+            box-shadow: 0 0 8px var(--primary);
         }
-        [data-theme="dark"] .theme-toggle { background: var(--primary); }
-        [data-theme="dark"] .theme-toggle::after { transform: translateX(20px); content: '🌙'; }
+        [data-theme="light"] .theme-toggle::after { transform: translateX(20px); }
 
-        /* ========== MAIN CONTAINER ========== */
+        /* ========== HERO STATS BAR ========== */
+        .hero-stats {
+            position: relative; z-index: 1;
+            display: grid; grid-template-columns: repeat(4, 1fr);
+            border-bottom: 1px solid var(--border-subtle);
+            background: var(--bg-deep);
+        }
+        .stat-cell {
+            padding: 18px 32px;
+            border-right: 1px solid var(--border-subtle);
+            position: relative; overflow: hidden;
+        }
+        .stat-cell:last-child { border-right: none; }
+        .stat-cell::before {
+            content: '';
+            position: absolute; top: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--primary), transparent);
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+        .stat-cell:hover::before { opacity: 1; }
+        .stat-num {
+            font-family: 'Space Mono', monospace;
+            font-size: 1.5rem; font-weight: 700; color: var(--primary);
+            line-height: 1;
+        }
+        .stat-label {
+            font-size: 0.72rem; color: var(--text-secondary); margin-top: 4px;
+            letter-spacing: 0.5px; text-transform: uppercase;
+        }
+        @media (max-width: 768px) { .hero-stats { grid-template-columns: 1fr 1fr; } }
+
+        /* ========== CONTAINER ========== */
         .container {
-            max-width: 1200px; margin: 30px auto; padding: 0 20px;
-            display: flex; flex-direction: column; gap: 30px;
+            position: relative; z-index: 1;
+            max-width: 1280px; margin: 0 auto; padding: 32px 24px;
+            display: flex; flex-direction: column; gap: 24px;
         }
 
-        /* ========== GLASSMORPHISM CARDS ========== */
+        /* ========== CARDS ========== */
         .card {
-            background: var(--bg-card);
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--border-card);
-            border-radius: 24px; padding: 36px;
-            box-shadow: var(--shadow-card), inset 0 1px 0 rgba(255, 255, 255, 0.2);
-            transition: background 0.4s, border-color 0.4s, box-shadow 0.4s;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .card:hover { border-color: var(--border-glow); }
+        .card-inner { padding: 32px; }
+
+        .card-header {
+            padding: 18px 32px;
+            border-bottom: 1px solid var(--border-subtle);
+            display: flex; align-items: center; gap: 12px;
+            background: var(--bg-deep);
+        }
+        .card-header-dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            background: var(--primary);
+            box-shadow: 0 0 6px var(--primary);
+        }
+        .card-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 0.85rem; font-weight: 700;
+            letter-spacing: 2.5px; text-transform: uppercase;
+            color: var(--text-primary);
+        }
+        .card-title-tag {
+            margin-left: auto;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.65rem; color: var(--text-secondary);
+            letter-spacing: 1px;
         }
 
-        /* ========== GRID LAYOUTS ========== */
+        /* ========== GRID ========== */
         .dashboard-grid {
-            display: grid; grid-template-columns: 1fr 1.2fr; gap: 30px;
+            display: grid; grid-template-columns: 1fr 1.15fr; gap: 24px;
         }
         @media (max-width: 968px) { .dashboard-grid { grid-template-columns: 1fr; } }
 
-        h2 { font-size: 1.6rem; margin-top: 0; margin-bottom: 4px; }
-        h3 { font-size: 1.1rem; color: var(--primary); border-bottom: 2px solid var(--border-input); padding-bottom: 8px; margin-top: 28px; }
-        p { line-height: 1.7; color: var(--text-muted); }
-
-        /* ========== DIAGNOSTIC FORM ========== */
+        /* ========== FORM ELEMENTS ========== */
         .form-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 0.9rem; }
-        input[type="number"], select {
-            width: 100%; padding: 12px 14px; border: 2px solid var(--border-input); border-radius: 12px;
-            background-color: var(--bg-card); font-family: inherit; font-size: 0.95rem;
-            transition: all 0.3s; color: var(--text-dark);
+        label {
+            display: flex; align-items: center; gap: 6px;
+            margin-bottom: 8px; font-weight: 600; font-size: 0.78rem;
+            text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary);
         }
-        input:focus, select:focus { outline: none; border-color: var(--primary-light); box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.1); }
+        label::before {
+            content: '//';
+            font-family: 'Space Mono', monospace;
+            color: var(--primary); font-size: 0.65rem;
+        }
 
-        /* --- Drag and Drop Zone --- */
+        input[type="number"], select {
+            width: 100%; padding: 11px 14px;
+            background: var(--bg-deep);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: 'Space Mono', monospace;
+            font-size: 0.85rem;
+            transition: all 0.3s;
+            appearance: none; -webkit-appearance: none;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-glow);
+            background: var(--bg-raised);
+        }
+        select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%2300e5c3' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-position: right 14px center;
+            padding-right: 38px; cursor: pointer;
+        }
+        [data-theme="light"] select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23007a66' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
+        }
+        select option { background: var(--bg-deep); }
+
+        /* ========== DROP ZONE ========== */
         .drop-zone {
-            width: 100%; min-height: 220px; border: 2px dashed var(--border-input); border-radius: 16px;
+            width: 100%; min-height: 200px;
+            border: 1px dashed var(--border-glow);
+            border-radius: 10px;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            margin-top: 8px; background: var(--bg-card); overflow: hidden; position: relative;
-            cursor: pointer; transition: all 0.3s ease; gap: 8px;
+            position: relative; cursor: pointer; overflow: hidden;
+            background: var(--bg-deep);
+            transition: all 0.3s;
+            gap: 8px;
+        }
+        .drop-zone::before {
+            content: '';
+            position: absolute; top: 0; left: -100%;
+            width: 100%; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--primary), transparent);
+            animation: scan-line 3s linear infinite;
+        }
+        @keyframes scan-line {
+            0% { top: -2px; left: 0; }
+            100% { top: 100%; left: 0; }
         }
         .drop-zone:hover, .drop-zone.drag-over {
-            border-color: var(--primary-light); background: var(--primary-ultra-light);
-            box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.08);
+            border-color: var(--primary);
+            background: rgba(0, 229, 195, 0.04);
+            box-shadow: 0 0 30px var(--primary-glow) inset, 0 0 30px var(--primary-glow);
         }
-        [data-theme="dark"] .drop-zone:hover, [data-theme="dark"] .drop-zone.drag-over {
-            background: rgba(20, 184, 166, 0.05);
-        }
-        .drop-zone-icon { font-size: 2.5rem; opacity: 0.5; }
-        .drop-zone-text { color: var(--text-light); font-weight: 500; font-size: 0.9rem; }
-        .drop-zone-hint { color: var(--text-light); font-size: 0.75rem; opacity: 0.6; }
         .drop-zone input[type="file"] { display: none; }
+        .drop-zone-icon { font-size: 2rem; opacity: 0.4; }
+        .drop-zone-text {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.78rem; color: var(--primary); letter-spacing: 1px;
+        }
+        .drop-zone-hint {
+            font-size: 0.7rem; color: var(--text-dim);
+            font-family: 'Space Mono', monospace;
+        }
         .drop-zone img {
-            max-width: 100%; max-height: 200px; object-fit: contain;
-            display: none; border-radius: 8px;
+            max-width: 100%; max-height: 190px; object-fit: contain;
+            display: none; border-radius: 6px; position: relative; z-index: 1;
         }
         .drop-zone.has-image .drop-zone-icon,
         .drop-zone.has-image .drop-zone-text,
         .drop-zone.has-image .drop-zone-hint { display: none; }
 
-        /* --- CTE Preview --- */
-        .preview-grid {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px;
-        }
-        .preview-panel {
-            border-radius: 12px; overflow: hidden; position: relative;
-            border: 1px solid var(--border-input); background: var(--bg-card);
-        }
-        .preview-panel img { width: 100%; height: 140px; object-fit: cover; display: block; }
+        /* ========== CTE PREVIEW ========== */
+        .preview-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+        .preview-panel { border-radius: 8px; overflow: hidden; position: relative; border: 1px solid var(--border-subtle); }
+        .preview-panel img { width: 100%; height: 130px; object-fit: cover; display: block; }
+        .preview-panel canvas { width: 100%; height: 130px; object-fit: cover; display: block; }
         .preview-panel-label {
             position: absolute; bottom: 0; left: 0; right: 0;
-            background: linear-gradient(transparent, rgba(0,0,0,0.7));
-            color: white; font-size: 0.7rem; font-weight: 600; padding: 16px 10px 6px;
-            text-transform: uppercase; letter-spacing: 1px;
+            background: linear-gradient(transparent, rgba(0,0,0,0.85));
+            color: var(--primary); font-size: 0.6rem; font-weight: 700;
+            padding: 16px 8px 6px; font-family: 'Space Mono', monospace;
+            text-transform: uppercase; letter-spacing: 2px;
         }
 
-        /* ========== BUTTONS ========== */
+        /* ========== SUBMIT BUTTON ========== */
         .btn-primary {
-            width: 100%; padding: 16px; background: linear-gradient(135deg, var(--primary), var(--primary-light));
-            color: white; border: none; border-radius: 12px; font-size: 1rem; font-weight: 700;
-            cursor: pointer; box-shadow: var(--shadow-btn); transition: all 0.3s ease; margin-top: 8px;
+            width: 100%; padding: 15px; margin-top: 8px;
+            background: transparent;
+            border: 1px solid var(--primary);
+            border-radius: 8px;
+            color: var(--primary);
+            font-family: 'Space Mono', monospace;
+            font-size: 0.85rem; font-weight: 700;
+            letter-spacing: 2px; text-transform: uppercase;
+            cursor: pointer;
+            position: relative; overflow: hidden;
+            transition: all 0.3s;
         }
-        .btn-primary:hover { box-shadow: 0 15px 35px rgba(15, 118, 110, 0.35); transform: translateY(-2px); }
-        .btn-primary:disabled { background: var(--border-input); cursor: not-allowed; transform: none; box-shadow: none; }
+        .btn-primary::before {
+            content: '';
+            position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, var(--primary-glow-strong), transparent);
+            transition: left 0.4s;
+        }
+        .btn-primary:hover::before { left: 100%; }
+        .btn-primary:hover {
+            background: var(--primary-glow);
+            box-shadow: 0 0 20px var(--primary-glow-strong), 0 0 40px var(--primary-glow);
+            color: var(--text-primary);
+        }
+        .btn-primary:disabled {
+            opacity: 0.3; cursor: not-allowed;
+            box-shadow: none; background: transparent;
+        }
+        .btn-primary:disabled:hover::before { left: -100%; }
 
         .btn-secondary {
-            padding: 10px 20px; background: transparent; color: var(--primary);
-            border: 2px solid var(--primary); border-radius: 10px; font-size: 0.85rem; font-weight: 600;
+            padding: 8px 18px;
+            background: transparent; border: 1px solid var(--border-glow);
+            border-radius: 6px; color: var(--text-secondary);
+            font-family: 'Space Mono', monospace;
+            font-size: 0.72rem; letter-spacing: 1px; text-transform: uppercase;
             cursor: pointer; transition: all 0.3s;
         }
-        .btn-secondary:hover { background: var(--primary); color: white; }
+        .btn-secondary:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-glow); }
 
         /* ========== LOADER ========== */
         .loader {
-            display: none; text-align: center; margin-top: 16px; color: var(--primary);
-            font-weight: 600; font-size: 0.9rem; animation: pulse 1.5s infinite;
+            display: none; text-align: center; margin-top: 16px;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.72rem; color: var(--primary); letter-spacing: 2px;
         }
-        @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
+        .loader-dots::after {
+            content: '';
+            animation: dots 1.5s steps(4, end) infinite;
+        }
+        @keyframes dots {
+            0%, 20% { content: ''; }
+            40% { content: '.'; }
+            60% { content: '..'; }
+            80%, 100% { content: '...'; }
+        }
+        .loader-bar {
+            width: 100%; height: 2px; background: var(--bg-raised);
+            border-radius: 2px; margin-top: 10px; overflow: hidden;
+        }
+        .loader-bar-fill {
+            height: 100%; width: 0%;
+            background: linear-gradient(90deg, transparent, var(--primary), transparent);
+            animation: loading-scan 1.8s ease-in-out infinite;
+        }
+        @keyframes loading-scan {
+            0% { width: 0%; margin-left: 0; }
+            50% { width: 60%; margin-left: 20%; }
+            100% { width: 0%; margin-left: 100%; }
+        }
 
-        /* ========== RESULT: CONFIDENCE GAUGE ========== */
+        /* ========== RESULT BOX ========== */
         #resultBox {
-            margin-top: 20px; display: none; animation: slideUp 0.5s ease-out;
-            text-align: center;
+            margin-top: 20px; display: none;
+            animation: reveal 0.5s cubic-bezier(0.22, 1, 0.36, 1);
         }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
-        .gauge-wrapper {
-            display: flex; flex-direction: column; align-items: center; gap: 12px;
-            padding: 24px; border-radius: 20px;
+        @keyframes reveal {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        .gauge-svg { width: 160px; height: 100px; }
-        .gauge-label { font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
-        .gauge-diagnosis { font-size: 1.4rem; font-weight: 800; }
-        .gauge-confidence-text { font-size: 0.85rem; color: var(--text-muted); }
+        .result-terminal {
+            border: 1px solid var(--border-glow);
+            border-radius: 10px; overflow: hidden;
+        }
+        .terminal-topbar {
+            background: var(--bg-deep);
+            padding: 10px 16px;
+            display: flex; align-items: center; gap: 8px;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+        .terminal-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .terminal-dot:nth-child(1) { background: var(--danger); }
+        .terminal-dot:nth-child(2) { background: var(--warning); }
+        .terminal-dot:nth-child(3) { background: var(--primary); }
+        .terminal-label {
+            margin-left: 8px;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.65rem; color: var(--text-dim); letter-spacing: 1px;
+        }
+        .terminal-body { padding: 20px; text-align: center; }
+        .gauge-svg { width: 160px; height: 100px; display: block; margin: 0 auto 12px; }
+        .gauge-diagnosis {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.25rem; font-weight: 800;
+            letter-spacing: 2px; margin-bottom: 6px;
+        }
+        .gauge-confidence-text {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.72rem; color: var(--text-secondary);
+            letter-spacing: 1px; margin-bottom: 16px;
+        }
+        .result-actions { display: flex; gap: 10px; justify-content: center; }
 
-        .result-actions { display: flex; gap: 10px; margin-top: 12px; justify-content: center; }
-
-        /* ========== PERFORMANCE BARS ========== */
-        .performance-grid { margin-top: 24px; display: grid; gap: 16px; }
-        .bar-container {
-            width: 100%; background: var(--gauge-trail); border-radius: 10px; height: 22px;
-            position: relative; overflow: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+        /* ========== PERFORMANCE METRICS ========== */
+        .performance-grid { display: flex; flex-direction: column; gap: 18px; margin-top: 20px; }
+        .metric-row { }
+        .metric-label { display: flex; justify-content: space-between; margin-bottom: 6px; }
+        .metric-name { font-size: 0.78rem; color: var(--text-secondary); font-weight: 500; }
+        .metric-value {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.8rem; color: var(--primary); font-weight: 700;
+        }
+        .bar-track {
+            height: 3px; background: var(--gauge-trail); border-radius: 2px;
+            position: relative; overflow: hidden;
         }
         .bar-fill {
-            height: 100%; background: linear-gradient(90deg, var(--primary), var(--primary-light));
-            border-radius: 10px; width: 0; transition: width 1.5s cubic-bezier(0.22, 1, 0.36, 1);
+            height: 100%; width: 0%;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            border-radius: 2px;
+            transition: width 1.8s cubic-bezier(0.22, 1, 0.36, 1);
+            box-shadow: 0 0 8px var(--primary-glow);
         }
-        .bar-label { display: flex; justify-content: space-between; margin-bottom: 6px; font-weight: 600; font-size: 0.88rem; }
-        .bar-percent { font-weight: 800; color: var(--primary); }
+        .bar-track::after {
+            content: '';
+            position: absolute; top: 0; right: 0; bottom: 0; left: 0;
+            background: linear-gradient(90deg, transparent 80%, var(--primary-glow-strong));
+            pointer-events: none;
+        }
 
-        /* ========== ARCHITECTURE DIAGRAM ========== */
+        /* ========== ARCHITECTURE ========== */
         .arch-diagram {
-            display: flex; align-items: center; justify-content: center; gap: 0;
-            margin: 24px 0 8px; flex-wrap: wrap; padding: 16px 0;
+            display: flex; align-items: center; justify-content: center;
+            gap: 6px; padding: 24px 0; flex-wrap: wrap;
         }
         .arch-node {
-            padding: 10px 14px; border-radius: 12px; font-size: 0.75rem; font-weight: 700;
-            text-align: center; position: relative; min-width: 90px;
-            transition: transform 0.3s, box-shadow 0.3s;
+            padding: 10px 14px; border-radius: 8px;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.65rem; text-align: center;
+            border: 1px solid var(--border-subtle);
+            background: var(--bg-deep);
+            color: var(--text-secondary); min-width: 80px;
+            transition: all 0.3s; line-height: 1.6;
         }
-        .arch-node:hover { transform: scale(1.08); }
-        .arch-input { background: var(--accent-light); color: var(--accent); border: 2px solid var(--accent); }
-        .arch-expert { background: var(--primary-ultra-light); color: var(--primary); border: 2px solid var(--primary); }
-        .arch-fusion { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; font-size: 0.8rem; }
-        .arch-output { background: #fef3c7; color: #92400e; border: 2px solid #f59e0b; }
-        .arch-arrow {
-            font-size: 1.2rem; color: var(--text-light); margin: 0 4px; font-weight: 300;
+        .arch-node:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-glow); transform: scale(1.05); }
+        .arch-input { border-color: var(--accent); color: var(--accent); }
+        .arch-expert { border-color: var(--primary); color: var(--primary); }
+        .arch-fusion {
+            border-color: var(--primary); color: var(--text-primary);
+            background: linear-gradient(135deg, rgba(0,229,195,0.15), rgba(59,142,255,0.15));
+            box-shadow: 0 0 16px var(--primary-glow);
         }
-        .arch-split { display: flex; flex-direction: column; gap: 8px; align-items: center; }
+        .arch-output { border-color: var(--warning); color: var(--warning); }
+        .arch-split { display: flex; flex-direction: column; gap: 6px; }
+        .arch-arrow { color: var(--text-dim); font-size: 1rem; flex-shrink: 0; }
 
-        /* ========== ANATOMY SECTION ========== */
-        .anatomy-section {
-            display: flex; align-items: center; justify-content: center; gap: 40px;
-            background: linear-gradient(to right, var(--bg-card), rgba(224, 242, 254, 0.15));
+        /* ========== ANATOMY ========== */
+        .anatomy-section-inner {
+            display: flex; align-items: center; gap: 40px; padding: 32px;
         }
-        .anatomy-wrapper { position: relative; height: 350px; width: 180px; flex-shrink: 0; }
+        @media (max-width: 768px) { .anatomy-section-inner { flex-direction: column; } }
+
+        .anatomy-wrapper { position: relative; height: 340px; width: 160px; flex-shrink: 0; }
         .silhouette {
             width: 100%; height: 100%;
-            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 500"><path fill="%23cbd5e1" d="M100 20c-15 0-25 12-25 28s10 28 25 28 25-12 25-28-10-28-25-28zm-35 65c-15 0-25 10-25 25v120c0 10 15 10 15 0v-100h10v200c0 15 20 15 20 0v-120h10v120c0 15 20 15 20 0V110h10v100c0 10 15 10 15 0v-120c0-15-10-25-25-25H65z"/></svg>') no-repeat center center;
-            background-size: contain; opacity: 0.7;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 500"><path fill="%23203040" d="M100 20c-15 0-25 12-25 28s10 28 25 28 25-12 25-28-10-28-25-28zm-35 65c-15 0-25 10-25 25v120c0 10 15 10 15 0v-100h10v200c0 15 20 15 20 0v-120h10v120c0 15 20 15 20 0V110h10v100c0 10 15 10 15 0v-120c0-15-10-25-25-25H65z"/></svg>') no-repeat center center;
+            background-size: contain; opacity: 0.6;
         }
         .node {
-            position: absolute; width: 14px; height: 14px; background: var(--accent);
-            border-radius: 50%; box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.7);
-            animation: pulse-node 2s infinite; cursor: pointer;
+            position: absolute; width: 12px; height: 12px;
+            background: var(--primary); border-radius: 50%;
+            box-shadow: 0 0 0 0 var(--primary-glow);
+            animation: node-pulse 2s infinite; cursor: pointer;
         }
         .node::after {
-            content: attr(data-label); position: absolute; left: 22px; top: -4px;
-            background: var(--bg-card); padding: 3px 8px; border-radius: 6px;
-            font-size: 0.72rem; font-weight: 600; color: var(--text-dark);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1); white-space: nowrap; pointer-events: none;
+            content: attr(data-label);
+            position: absolute; left: 20px; top: -4px;
+            background: var(--bg-raised);
+            border: 1px solid var(--border-glow);
+            padding: 3px 10px; border-radius: 4px;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.62rem; color: var(--primary);
+            white-space: nowrap; pointer-events: none;
+            letter-spacing: 1px;
         }
         .node-head { top: 12%; left: 47%; }
-        .node-torso { top: 35%; left: 47%; }
-        .node-upper { top: 30%; left: 20%; }
-        .node-lower { top: 70%; left: 35%; }
-        @keyframes pulse-node {
-            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.7); }
-            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(14, 165, 233, 0); }
-            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(14, 165, 233, 0); }
+        .node-torso { top: 37%; left: 47%; }
+        .node-upper { top: 30%; left: 15%; }
+        .node-lower { top: 70%; left: 37%; }
+        @keyframes node-pulse {
+            0% { box-shadow: 0 0 0 0 var(--primary-glow-strong); }
+            70% { box-shadow: 0 0 0 10px rgba(0, 229, 195, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 229, 195, 0); }
         }
         .anatomy-text { flex: 1; }
-        @media (max-width: 768px) { .anatomy-section { flex-direction: column; } }
+        .anatomy-text h2 { margin-bottom: 12px; }
+        .anatomy-list { list-style: none; margin-top: 16px; display: flex; flex-direction: column; gap: 10px; }
+        .anatomy-list li {
+            display: flex; align-items: center; gap: 10px;
+            font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;
+        }
+        .anatomy-list li::before {
+            content: '→';
+            font-family: 'Space Mono', monospace;
+            color: var(--primary); font-size: 0.7rem; flex-shrink: 0;
+        }
+        .anatomy-list strong { color: var(--text-primary); }
 
-        /* ========== SCAN HISTORY LOG ========== */
-        .history-section { }
-        .history-header { display: flex; justify-content: space-between; align-items: center; }
-        .history-list { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; max-height: 300px; overflow-y: auto; }
+        /* ========== HISTORY ========== */
+        .history-header-row { display: flex; justify-content: space-between; align-items: center; padding: 16px 32px; }
+        .history-list { display: flex; flex-direction: column; gap: 1px; max-height: 320px; overflow-y: auto; border-top: 1px solid var(--border-subtle); }
+        .history-list::-webkit-scrollbar { width: 4px; }
+        .history-list::-webkit-scrollbar-track { background: transparent; }
+        .history-list::-webkit-scrollbar-thumb { background: var(--border-glow); border-radius: 2px; }
+
         .history-item {
-            display: flex; align-items: center; gap: 14px;
-            padding: 12px; border-radius: 14px; border: 1px solid var(--border-input);
-            background: var(--bg-card); transition: background 0.2s;
+            display: flex; align-items: center; gap: 16px;
+            padding: 14px 32px;
+            border-bottom: 1px solid var(--border-subtle);
+            transition: background 0.2s;
         }
-        .history-item:hover { background: var(--bg-card-hover); }
+        .history-item:hover { background: var(--bg-raised); }
         .history-thumb {
-            width: 48px; height: 48px; border-radius: 10px; object-fit: cover;
-            border: 1px solid var(--border-input); flex-shrink: 0;
+            width: 44px; height: 44px; border-radius: 6px; object-fit: cover;
+            border: 1px solid var(--border-subtle); flex-shrink: 0;
+            filter: saturate(0.8);
         }
-        .history-info { flex: 1; }
-        .history-diag { font-weight: 700; font-size: 0.88rem; }
-        .history-meta { font-size: 0.75rem; color: var(--text-light); margin-top: 2px; }
+        .history-diag {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.8rem; color: var(--text-primary); font-weight: 700;
+        }
+        .history-meta { font-size: 0.72rem; color: var(--text-dim); margin-top: 3px; letter-spacing: 0.5px; }
         .history-badge {
-            padding: 4px 10px; border-radius: 8px; font-size: 0.72rem; font-weight: 700;
-            flex-shrink: 0; text-transform: uppercase; letter-spacing: 0.5px;
+            margin-left: auto; flex-shrink: 0;
+            padding: 4px 12px; border-radius: 4px;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.62rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 1px;
+            border: 1px solid;
         }
-        .badge-benign { background: var(--success-bg); color: var(--success); }
-        .badge-malignant { background: var(--danger-bg); color: var(--danger); }
-        .history-empty { text-align: center; color: var(--text-light); font-size: 0.85rem; padding: 24px 0; }
+        .badge-benign { background: var(--success-glow); color: var(--success); border-color: var(--success); }
+        .badge-malignant { background: var(--danger-glow); color: var(--danger); border-color: var(--danger); }
+        .history-empty {
+            text-align: center; padding: 40px;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.72rem; color: var(--text-dim); letter-spacing: 1px;
+        }
 
-        /* ========== DISCLAIMER MODAL ========== */
+        /* ========== TYPOGRAPHY ========== */
+        h2 {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.4rem; font-weight: 800;
+            letter-spacing: -0.5px; color: var(--text-primary); margin-bottom: 8px;
+        }
+        p { line-height: 1.75; color: var(--text-secondary); font-size: 0.9rem; }
+        .section-eyebrow {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.65rem; color: var(--primary);
+            letter-spacing: 3px; text-transform: uppercase; margin-bottom: 6px;
+        }
+
+        /* ========== MODAL ========== */
         .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: var(--modal-overlay); z-index: 1000;
+            position: fixed; inset: 0; z-index: 1000;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
             display: flex; align-items: center; justify-content: center;
-            backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
             animation: fadeIn 0.3s ease;
         }
         .modal-overlay.hidden { display: none; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         .modal-box {
-            background: var(--bg-card); backdrop-filter: blur(20px);
-            border: 1px solid var(--border-card); border-radius: 24px;
-            padding: 40px; max-width: 520px; width: 90%; text-align: center;
-            box-shadow: 0 30px 60px rgba(0,0,0,0.2);
+            background: var(--bg-surface);
+            border: 1px solid var(--border-glow);
+            border-radius: 16px;
+            padding: 48px 40px; max-width: 500px; width: 90%; text-align: center;
+            box-shadow: 0 0 60px var(--primary-glow), 0 30px 60px rgba(0,0,0,0.4);
         }
-        .modal-icon { font-size: 3rem; margin-bottom: 16px; }
-        .modal-box h2 { margin-bottom: 16px; font-size: 1.4rem; }
-        .modal-box p { font-size: 0.9rem; line-height: 1.8; margin-bottom: 24px; }
+        .modal-icon { font-size: 2.5rem; margin-bottom: 16px; }
+        .modal-box h2 { margin-bottom: 16px; }
+        .modal-box p { font-size: 0.88rem; margin-bottom: 28px; }
         .modal-box .btn-primary { width: auto; padding: 14px 40px; display: inline-block; }
 
+        /* ========== DIVIDER ========== */
+        .divider {
+            height: 1px; background: linear-gradient(90deg, transparent, var(--border-glow), transparent);
+            margin: 28px 0;
+        }
+
         /* ========== FOOTER ========== */
-        .footer { text-align: center; margin: 30px 0; font-size: 0.8rem; color: var(--text-light); }
+        footer {
+            position: relative; z-index: 1;
+            border-top: 1px solid var(--border-subtle);
+            padding: 24px 40px;
+            display: flex; justify-content: space-between; align-items: center;
+            background: var(--bg-deep);
+        }
+        .footer-left {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.65rem; color: var(--text-dim); letter-spacing: 1px;
+        }
+        .footer-right {
+            font-size: 0.72rem; color: var(--text-dim);
+        }
+        @media (max-width: 600px) { footer { flex-direction: column; gap: 8px; text-align: center; } }
+
+        /* ========== GLOW CARD VARIANT ========== */
+        .card-glow { box-shadow: 0 0 30px var(--primary-glow) inset; }
+
+        /* ========== INLINE GRID ========== */
+        .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+        /* ========== RESULT COLORS ========== */
+        .result-malignant { color: var(--danger); }
+        .result-benign { color: var(--primary); }
     </style>
 </head>
 <body>
 
+    <!-- DISCLAIMER MODAL -->
     <div class="modal-overlay" id="disclaimerModal">
         <div class="modal-box">
             <div class="modal-icon">⚠️</div>
@@ -375,180 +697,275 @@
                 This system is an <strong>AI research demonstration tool</strong> and does <strong>not</strong> constitute medical advice, diagnosis, or treatment recommendation.
                 All findings generated by Derma-Vision must be confirmed by <strong>histopathological biopsy</strong> performed by a licensed dermatologist.
                 <br><br>
-                By proceeding, you acknowledge that this tool is intended for <strong>educational and research purposes only</strong>.
+                By proceeding, you acknowledge this tool is intended for <strong>educational and research purposes only</strong>.
             </p>
-            <button class="btn-primary" onclick="acceptDisclaimer()">I Understand — Proceed</button>
+            <button class="btn-primary" onclick="acceptDisclaimer()">// ACKNOWLEDGE & PROCEED</button>
         </div>
     </div>
 
+    <!-- AMBIENT -->
     <div class="ambient-bg">
         <div class="orb orb-1"></div>
         <div class="orb orb-2"></div>
         <div class="orb orb-3"></div>
     </div>
 
+    <!-- HEADER -->
     <header>
         <div class="header-brand">
-            <div class="header-logo">D</div>
-            <h1>DIAGNOMASS</h1>
+            <div class="header-logo">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L2 7l10 5 10-5-10-5z" stroke="#00e5c3" stroke-width="1.5" stroke-linejoin="round"/>
+                    <path d="M2 17l10 5 10-5" stroke="#00e5c3" stroke-width="1.5" stroke-linejoin="round"/>
+                    <path d="M2 12l10 5 10-5" stroke="#3b8eff" stroke-width="1.5" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <div>
+                <span class="brand-name">Diagnomass</span>
+                <span class="brand-sub">Derma-Vision AI · v2.4</span>
+            </div>
         </div>
+
+        <div class="header-center">
+            <div class="status-dot"></div>
+            <span class="status-label">SYSTEM <span>ONLINE</span> · MODEL READY</span>
+        </div>
+
         <div class="header-right">
-            <span class="header-tag">Derma-Vision AI</span>
-            <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle Dark Mode"></button>
+            <span class="auc-badge">AUC 0.9941</span>
+            <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle Theme"></button>
         </div>
     </header>
 
-    <div class="container">
-
-        <div class="dashboard-grid">
-
-            <div class="card">
-                <h2>Diagnostic Console</h2>
-                <p style="margin-bottom: 20px;">Upload a dermoscopic scan and initialize patient metadata.</p>
-
-                <div class="form-group">
-                    <label>High-Resolution Dermoscopic Image</label>
-                    <div class="drop-zone" id="dropZone">
-                        <input type="file" id="imageInput" accept="image/png, image/jpeg">
-                        <span class="drop-zone-icon">📷</span>
-                        <span class="drop-zone-text">Drag & drop image here, or click to browse</span>
-                        <span class="drop-zone-hint">Supports JPG, PNG up to 10MB</span>
-                        <img id="imagePreview" src="" alt="Lesion Preview">
-                    </div>
-                </div>
-
-                <div class="preview-grid" id="ctePreview" style="display:none;">
-                    <div class="preview-panel">
-                        <img id="rgbPreviewImg" src="" alt="RGB">
-                        <div class="preview-panel-label">RGB Input</div>
-                    </div>
-                    <div class="preview-panel">
-                        <canvas id="cteCanvas" width="400" height="400" style="width:100%; height:140px; object-fit:cover; display:block;"></canvas>
-                        <div class="preview-panel-label">CTE Feature Map</div>
-                    </div>
-                </div>
-
-                <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-                    <div>
-                        <label for="ageInput">Patient Age</label>
-                        <input type="number" id="ageInput" value="50" min="0" max="120">
-                    </div>
-                    <div>
-                        <label for="sexInput">Biological Sex</label>
-                        <select id="sexInput">
-                            <option value="Male">Male</option>
-                            <option value="Female">Female</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="siteInput">Localized Anatomical Site</label>
-                    <select id="siteInput">
-                        <option value="Head/Neck">Head/Neck</option>
-                        <option value="Lower Extremity">Lower Extremity (Legs)</option>
-                        <option value="Oral/Genital">Oral/Genital</option>
-                        <option value="Palms/Soles">Palms/Soles</option>
-                        <option value="Torso" selected>Torso (Chest/Back/Abdomen)</option>
-                        <option value="Upper Extremity">Upper Extremity (Arms)</option>
-                    </select>
-                </div>
-
-                <button class="btn-primary" id="submitBtn" onclick="runAnalysis()">⚡ Initiate AI Analysis</button>
-                <div class="loader" id="loadingText">Fusing dual-stream visual and tabular networks...</div>
-
-                <div id="resultBox">
-                    <div class="gauge-wrapper" id="gaugeWrapper">
-                        <svg class="gauge-svg" viewBox="0 0 200 110">
-                            <path d="M20 100 A80 80 0 0 1 180 100" fill="none" stroke="var(--gauge-trail)" stroke-width="14" stroke-linecap="round"/>
-                            <path id="gaugeArc" d="M20 100 A80 80 0 0 1 180 100" fill="none" stroke="var(--primary)" stroke-width="14" stroke-linecap="round" stroke-dasharray="0 251.33"/>
-                        </svg>
-                        <div class="gauge-diagnosis" id="diagnosisText"></div>
-                        <div class="gauge-confidence-text" id="confidenceText"></div>
-                        <div class="result-actions">
-                            <button class="btn-secondary" onclick="exportPDF()">📄 Export Report</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
-                <div>
-                    <h2>Clinical Intelligence</h2>
-                    <p>Derma-Vision utilizes a <strong>Dual-Stream EfficientNet-B7</strong> ensemble. Unlike standard classifiers, our network simultaneously processes raw RGB pixels alongside offline-computed <strong>CTE Maps</strong> (Color, Texture, and Edge saturation), fusing natural visual patterns with strict mathematical gradients.</p>
-
-                    <h3>Neural Architecture</h3>
-                    <div class="arch-diagram">
-                        <div class="arch-node arch-input">📷 Input<br>Image</div>
-                        <span class="arch-arrow">→</span>
-                        <div class="arch-split">
-                            <div class="arch-node arch-expert">🧠 RGB<br>Expert B7</div>
-                            <div class="arch-node arch-expert">🔬 CTE<br>Expert B7</div>
-                        </div>
-                        <span class="arch-arrow">→</span>
-                        <div class="arch-node arch-fusion">⚡ Ensemble<br>Fusion</div>
-                        <span class="arch-arrow">→</span>
-                        <div class="arch-node arch-input">📊 Tabular<br>MLP</div>
-                        <span class="arch-arrow">→</span>
-                        <div class="arch-node arch-output">🏥 Clinical<br>Diagnosis</div>
-                    </div>
-                </div>
-
-                <div>
-                    <h3>Model Performance Metrics</h3>
-                    <p style="font-size: 0.82rem; margin-top: -4px;">Validated on a strictly balanced anatomical test set.</p>
-                    <div class="performance-grid">
-                        <div>
-                            <div class="bar-label"><span>Validation AUC</span> <span class="bar-percent">0.9941</span></div>
-                            <div class="bar-container"><div class="bar-fill" data-width="99.41%"></div></div>
-                        </div>
-                        <div>
-                            <div class="bar-label"><span>F1-Score (Accuracy)</span> <span class="bar-percent">0.9659</span></div>
-                            <div class="bar-container"><div class="bar-fill" data-width="96.59%"></div></div>
-                        </div>
-                        <div>
-                            <div class="bar-label"><span>Clinical Recall (Sensitivity)</span> <span class="bar-percent">0.9780</span></div>
-                            <div class="bar-container"><div class="bar-fill" data-width="97.80%"></div></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    <!-- HERO STATS -->
+    <div class="hero-stats">
+        <div class="stat-cell">
+            <div class="stat-num">99.41%</div>
+            <div class="stat-label">Validation AUC</div>
         </div>
-
-        <div class="card anatomy-section">
-            <div class="anatomy-text">
-                <h2>Spatial Feature Localization</h2>
-                <p>Malignancy probabilities shift based on the anatomical origin. Derma-Vision utilizes a Tabular MLP to weigh visual inference against geographical prior probabilities.</p>
-                <ul style="color: var(--text-muted); line-height: 2; font-weight: 500; font-size: 0.9rem;">
-                    <li><strong>Head & Neck:</strong> High sun exposure, distinct texture.</li>
-                    <li><strong>Torso:</strong> Largest surface area, nodular variants.</li>
-                    <li><strong>Extremities:</strong> Arms (Upper) and Legs (Lower).</li>
-                    <li><strong>Acral Regions:</strong> Palms & Soles (ridge patterns).</li>
-                </ul>
-            </div>
-            <div class="anatomy-wrapper">
-                <div class="silhouette"></div>
-                <div class="node node-head" data-label="Head / Neck"></div>
-                <div class="node node-upper" data-label="Upper Extremity"></div>
-                <div class="node node-torso" data-label="Torso"></div>
-                <div class="node node-lower" data-label="Lower Extremity"></div>
-            </div>
+        <div class="stat-cell">
+            <div class="stat-num">96.59%</div>
+            <div class="stat-label">F1-Score Accuracy</div>
         </div>
-
-        <div class="card history-section">
-            <div class="history-header">
-                <h2>Scan History</h2>
-                <button class="btn-secondary" onclick="clearHistory()">Clear All</button>
-            </div>
-            <div class="history-list" id="historyList">
-                <div class="history-empty" id="historyEmpty">No scans recorded in this session yet.</div>
-            </div>
+        <div class="stat-cell">
+            <div class="stat-num">97.80%</div>
+            <div class="stat-label">Clinical Sensitivity</div>
         </div>
-
-        <div class="footer">
-            © 2026 Diagnomass | AI research & educational demonstration. Not a substitute for histopathological biopsy.
+        <div class="stat-cell">
+            <div class="stat-num">B7×2</div>
+            <div class="stat-label">EfficientNet Ensemble</div>
         </div>
     </div>
+
+    <div class="container">
+
+        <!-- MAIN DASHBOARD -->
+        <div class="dashboard-grid">
+
+            <!-- LEFT: DIAGNOSTIC CONSOLE -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-header-dot"></div>
+                    <span class="card-title">Diagnostic Console</span>
+                    <span class="card-title-tag">UPLOAD & ANALYZE</span>
+                </div>
+                <div class="card-inner">
+
+                    <div class="form-group">
+                        <label>Dermoscopic Image</label>
+                        <div class="drop-zone" id="dropZone">
+                            <input type="file" id="imageInput" accept="image/png, image/jpeg">
+                            <span class="drop-zone-icon">⬡</span>
+                            <span class="drop-zone-text">DRAG · DROP · OR CLICK TO SCAN</span>
+                            <span class="drop-zone-hint">JPG, PNG — max 10MB</span>
+                            <img id="imagePreview" src="" alt="Lesion Preview">
+                        </div>
+                    </div>
+
+                    <div class="preview-grid" id="ctePreview" style="display:none;">
+                        <div class="preview-panel">
+                            <img id="rgbPreviewImg" src="" alt="RGB">
+                            <div class="preview-panel-label">RGB INPUT</div>
+                        </div>
+                        <div class="preview-panel">
+                            <canvas id="cteCanvas" width="400" height="400"></canvas>
+                            <div class="preview-panel-label">CTE FEATURE MAP</div>
+                        </div>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <div class="two-col">
+                        <div class="form-group">
+                            <label>Patient Age</label>
+                            <input type="number" id="ageInput" value="50" min="0" max="120">
+                        </div>
+                        <div class="form-group">
+                            <label>Biological Sex</label>
+                            <select id="sexInput">
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Anatomical Site</label>
+                        <select id="siteInput">
+                            <option value="Head/Neck">Head / Neck</option>
+                            <option value="Lower Extremity">Lower Extremity (Legs)</option>
+                            <option value="Oral/Genital">Oral / Genital</option>
+                            <option value="Palms/Soles">Palms / Soles</option>
+                            <option value="Torso" selected>Torso (Chest / Back / Abdomen)</option>
+                            <option value="Upper Extremity">Upper Extremity (Arms)</option>
+                        </select>
+                    </div>
+
+                    <button class="btn-primary" id="submitBtn" onclick="runAnalysis()">⚡ INITIATE AI ANALYSIS</button>
+
+                    <div class="loader" id="loadingText">
+                        <span class="loader-dots">FUSING DUAL-STREAM NETWORKS</span>
+                        <div class="loader-bar"><div class="loader-bar-fill"></div></div>
+                    </div>
+
+                    <div id="resultBox">
+                        <div class="result-terminal">
+                            <div class="terminal-topbar">
+                                <div class="terminal-dot"></div>
+                                <div class="terminal-dot"></div>
+                                <div class="terminal-dot"></div>
+                                <span class="terminal-label">diagnomass://output/classification</span>
+                            </div>
+                            <div class="terminal-body">
+                                <svg class="gauge-svg" viewBox="0 0 200 110">
+                                    <path d="M20 100 A80 80 0 0 1 180 100" fill="none" stroke="var(--gauge-trail)" stroke-width="10" stroke-linecap="round"/>
+                                    <path id="gaugeArc" d="M20 100 A80 80 0 0 1 180 100" fill="none" stroke="var(--primary)" stroke-width="10" stroke-linecap="round" stroke-dasharray="0 251.33"/>
+                                </svg>
+                                <div class="gauge-diagnosis" id="diagnosisText"></div>
+                                <div class="gauge-confidence-text" id="confidenceText"></div>
+                                <div class="result-actions">
+                                    <button class="btn-secondary" onclick="exportPDF()">↓ EXPORT REPORT</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- RIGHT: CLINICAL INTELLIGENCE -->
+            <div class="card" style="display:flex; flex-direction:column;">
+                <div class="card-header">
+                    <div class="card-header-dot" style="background: var(--accent); box-shadow: 0 0 6px var(--accent);"></div>
+                    <span class="card-title">Clinical Intelligence</span>
+                    <span class="card-title-tag">ARCHITECTURE · METRICS</span>
+                </div>
+                <div class="card-inner" style="flex:1; display:flex; flex-direction:column;">
+
+                    <p class="section-eyebrow">DUAL-STREAM EFFICIENTNET-B7</p>
+                    <h2>Neural Pipeline</h2>
+                    <p>Unlike standard classifiers, our network simultaneously processes raw RGB pixels alongside offline-computed <strong>CTE Maps</strong> (Color, Texture, and Edge saturation), fusing natural visual patterns with strict mathematical gradients for superior lesion differentiation.</p>
+
+                    <div class="arch-diagram">
+                        <div class="arch-node arch-input">📷<br>INPUT<br>IMAGE</div>
+                        <span class="arch-arrow">→</span>
+                        <div class="arch-split">
+                            <div class="arch-node arch-expert">🧠 RGB<br>EXPERT B7</div>
+                            <div class="arch-node arch-expert">🔬 CTE<br>EXPERT B7</div>
+                        </div>
+                        <span class="arch-arrow">→</span>
+                        <div class="arch-node arch-fusion">⚡ ENSEMBLE<br>FUSION</div>
+                        <span class="arch-arrow">→</span>
+                        <div class="arch-node arch-input" style="border-color:var(--accent); color:var(--accent);">📊 TABULAR<br>MLP</div>
+                        <span class="arch-arrow">→</span>
+                        <div class="arch-node arch-output">🏥 CLINICAL<br>OUTPUT</div>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <p class="section-eyebrow">VALIDATED ON BALANCED ANATOMICAL TEST SET</p>
+                    <h2>Model Performance</h2>
+
+                    <div class="performance-grid">
+                        <div class="metric-row">
+                            <div class="metric-label">
+                                <span class="metric-name">Validation AUC</span>
+                                <span class="metric-value">0.9941</span>
+                            </div>
+                            <div class="bar-track"><div class="bar-fill" data-width="99.41%"></div></div>
+                        </div>
+                        <div class="metric-row">
+                            <div class="metric-label">
+                                <span class="metric-name">F1-Score (Accuracy)</span>
+                                <span class="metric-value">0.9659</span>
+                            </div>
+                            <div class="bar-track"><div class="bar-fill" data-width="96.59%"></div></div>
+                        </div>
+                        <div class="metric-row">
+                            <div class="metric-label">
+                                <span class="metric-name">Clinical Recall (Sensitivity)</span>
+                                <span class="metric-value">0.9780</span>
+                            </div>
+                            <div class="bar-track"><div class="bar-fill" data-width="97.80%"></div></div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- ANATOMY SECTION -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-header-dot" style="background: var(--accent); box-shadow: 0 0 6px var(--accent);"></div>
+                <span class="card-title">Spatial Feature Localization</span>
+                <span class="card-title-tag">ANATOMICAL SITE PRIORS</span>
+            </div>
+            <div class="anatomy-section-inner">
+                <div class="anatomy-text">
+                    <p class="section-eyebrow">TABULAR MLP SITE WEIGHTING</p>
+                    <h2>Anatomical Intelligence</h2>
+                    <p>Malignancy probabilities shift based on anatomical origin. Derma-Vision's Tabular MLP weighs visual inference against geographical prior probabilities encoded during training.</p>
+                    <ul class="anatomy-list">
+                        <li><strong>Head & Neck:</strong> High UV exposure, distinct keratinocyte texture signatures.</li>
+                        <li><strong>Torso:</strong> Largest surface area, nodular and superficial spreading variants.</li>
+                        <li><strong>Extremities:</strong> Upper (Arms) and Lower (Legs) with distinct vascular patterns.</li>
+                        <li><strong>Acral Regions:</strong> Palms & Soles — unique ridge patterns, higher acral lentiginous risk.</li>
+                    </ul>
+                </div>
+                <div class="anatomy-wrapper">
+                    <div class="silhouette"></div>
+                    <div class="node node-head" data-label="HEAD / NECK"></div>
+                    <div class="node node-upper" data-label="UPPER EXT."></div>
+                    <div class="node node-torso" data-label="TORSO"></div>
+                    <div class="node node-lower" data-label="LOWER EXT."></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SCAN HISTORY -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-header-dot" style="background:var(--warning); box-shadow: 0 0 6px var(--warning);"></div>
+                <span class="card-title">Scan History</span>
+                <span class="card-title-tag">SESSION LOG</span>
+            </div>
+            <div class="history-header-row">
+                <p style="margin:0; font-size:0.8rem;">Recent diagnostic sessions are stored locally in this browser.</p>
+                <button class="btn-secondary" onclick="clearHistory()">CLEAR ALL</button>
+            </div>
+            <div class="history-list" id="historyList">
+                <div class="history-empty" id="historyEmpty">// NO SCANS RECORDED IN THIS SESSION</div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="footer-left">© 2026 DIAGNOMASS · DERMA-VISION AI · NOT FOR CLINICAL USE</div>
+        <div class="footer-right">AI research & educational demonstration. Not a substitute for histopathological biopsy.</div>
+    </footer>
 
     <script type="module">
         import { Client } from "https://cdn.jsdelivr.net/npm/@gradio/client/dist/index.min.js";
@@ -605,7 +1022,7 @@
             reader.readAsDataURL(file);
         }
 
-        // --- CTE Preview (Local Canvas Simulation) ---
+        // --- CTE Preview ---
         function generateCTEPreview(dataURL) {
             const img = new Image();
             img.onload = function() {
@@ -649,7 +1066,7 @@
             
             const age = parseFloat(document.getElementById('ageInput').value);
             const sex = document.getElementById('sexInput').value;
-            const site = document.getElementById('siteInput').value; // Now strictly pulls capitalized value from HTML
+            const site = document.getElementById('siteInput').value;
 
             const submitBtn = document.getElementById('submitBtn');
             const loadingText = document.getElementById('loadingText');
@@ -661,20 +1078,12 @@
 
             try {
                 const client = await Client.connect("developer-SOUMYA/Derma-Vision");
-                
-                // CRITICAL FIX: Sending data as a positional array to bypass dict mapping errors
-                const result = await client.predict("/predict", [
-                    currentFile,
-                    age,
-                    sex,
-                    site
-                ]);
-
+                const result = await client.predict("/predict", [currentFile, age, sex, site]);
                 const diagnosis = result.data[0];
                 parseDiagnosis(diagnosis);
             } catch (error) {
                 console.error("Diagnosis Error Caught:", error);
-                showError("Server Error. The Python script crashed or the server timed out. Check the browser console (F12) for logs.");
+                showError("Server unavailable or timed out. Check console (F12) for details.");
             } finally {
                 submitBtn.disabled = false;
                 loadingText.style.display = 'none';
@@ -690,26 +1099,22 @@
             lastDiagnosis = isMalignant ? 'Malignant' : 'Benign';
             lastConfidence = confidence;
 
-            const wrapper = document.getElementById('gaugeWrapper');
             const diagText = document.getElementById('diagnosisText');
             const confText = document.getElementById('confidenceText');
             const resultBox = document.getElementById('resultBox');
-
-            const color = isMalignant ? '#e11d48' : '#059669';
-            const bgColor = isMalignant ? 'var(--danger-bg)' : 'var(--success-bg)';
-            const borderColor = isMalignant ? 'var(--danger-border)' : 'var(--success-border)';
-
-            wrapper.style.background = bgColor;
-            wrapper.style.border = `2px solid ${borderColor}`;
-            diagText.textContent = isMalignant ? '🔴 MALIGNANT DETECTED' : '🟢 BENIGN — LOW RISK';
-            diagText.style.color = color;
-            confText.textContent = `AI Confidence: ${confidence.toFixed(1)}%`;
-
             const arc = document.getElementById('gaugeArc');
-            arc.style.stroke = color;
+
+            const color = isMalignant ? 'var(--danger)' : 'var(--primary)';
+            diagText.innerHTML = isMalignant
+                ? '<span style="color:var(--danger)">■ MALIGNANT DETECTED</span>'
+                : '<span style="color:var(--primary)">■ BENIGN — LOW RISK</span>';
+            confText.textContent = `// AI_CONFIDENCE: ${confidence.toFixed(1)}%`;
+
+            arc.style.stroke = isMalignant ? '#ff3d6b' : '#00e5c3';
+            arc.style.filter = `drop-shadow(0 0 6px ${isMalignant ? 'rgba(255,61,107,0.6)' : 'rgba(0,229,195,0.6)'})`;
             const totalLength = 251.33;
             const fillLength = (confidence / 100) * totalLength;
-            arc.style.transition = 'stroke-dasharray 1s ease-out';
+            arc.style.transition = 'stroke-dasharray 1.2s cubic-bezier(0.22,1,0.36,1)';
             arc.setAttribute('stroke-dasharray', `${fillLength} ${totalLength}`);
 
             resultBox.style.display = 'block';
@@ -717,14 +1122,10 @@
         }
 
         function showError(msg) {
-            const wrapper = document.getElementById('gaugeWrapper');
             const diagText = document.getElementById('diagnosisText');
             const confText = document.getElementById('confidenceText');
             const resultBox = document.getElementById('resultBox');
-            wrapper.style.background = 'var(--warning-bg)';
-            wrapper.style.border = '2px solid var(--warning-border)';
-            diagText.textContent = '⚠️ SERVER UNAVAILABLE';
-            diagText.style.color = 'var(--warning-text)';
+            diagText.innerHTML = '<span style="color:var(--warning)">⚠ SERVER UNAVAILABLE</span>';
             confText.textContent = msg;
             document.getElementById('gaugeArc').setAttribute('stroke-dasharray', '0 251.33');
             resultBox.style.display = 'block';
@@ -734,7 +1135,6 @@
         function addToHistory(isMalignant, confidence) {
             const history = JSON.parse(localStorage.getItem('diagnomass_history') || '[]');
             history.unshift({
-                thumbnail: currentImageDataURL ? currentImageDataURL.substring(0, 200) + '...' : '',
                 fullThumb: currentImageDataURL,
                 diagnosis: isMalignant ? 'Malignant' : 'Benign',
                 confidence: confidence.toFixed(1),
@@ -752,15 +1152,15 @@
             const list = document.getElementById('historyList');
             const history = JSON.parse(localStorage.getItem('diagnomass_history') || '[]');
             if (history.length === 0) {
-                list.innerHTML = '<div class="history-empty">No scans recorded in this session yet.</div>';
+                list.innerHTML = '<div class="history-empty">// NO SCANS RECORDED IN THIS SESSION</div>';
                 return;
             }
             list.innerHTML = history.map((item, i) => `
                 <div class="history-item">
                     <img class="history-thumb" src="${item.fullThumb || ''}" alt="Scan ${i+1}" onerror="this.style.display='none'">
                     <div class="history-info">
-                        <div class="history-diag">${item.diagnosis} — ${item.confidence}%</div>
-                        <div class="history-meta">${item.site} · Age ${item.age} · ${item.sex} · ${item.timestamp}</div>
+                        <div class="history-diag">${item.diagnosis.toUpperCase()} — ${item.confidence}%</div>
+                        <div class="history-meta">${item.site} · AGE ${item.age} · ${item.sex.toUpperCase()} · ${item.timestamp}</div>
                     </div>
                     <span class="history-badge ${item.diagnosis === 'Malignant' ? 'badge-malignant' : 'badge-benign'}">${item.diagnosis}</span>
                 </div>
@@ -784,37 +1184,37 @@
             w.document.write(`
                 <html><head><title>Diagnomass Clinical Report</title>
                 <style>
-                    body { font-family: 'Segoe UI', sans-serif; padding: 40px; color: #1e293b; max-width: 700px; margin: auto; }
-                    h1 { color: #0f766e; border-bottom: 3px solid #0f766e; padding-bottom: 8px; }
-                    .row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e2e8f0; }
-                    .label { font-weight: 600; color: #64748b; }
-                    .diagnosis-box { margin: 24px 0; padding: 20px; border-radius: 12px; text-align: center; font-size: 1.4rem; font-weight: 800; }
+                    body { font-family: 'Courier New', monospace; padding: 40px; color: #1e293b; max-width: 700px; margin: auto; background: #f8fafc; }
+                    h1 { color: #007a66; border-bottom: 3px solid #007a66; padding-bottom: 8px; font-size: 1.4rem; letter-spacing: 2px; }
+                    .row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e2e8f0; font-size: 0.85rem; }
+                    .label { font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 1px; }
+                    .diagnosis-box { margin: 24px 0; padding: 24px; border-radius: 8px; text-align: center; font-size: 1.3rem; font-weight: 800; letter-spacing: 2px; }
                     .benign { background: #d1fae5; color: #059669; border: 2px solid #6ee7b7; }
                     .malignant { background: #fee2e2; color: #e11d48; border: 2px solid #fda4af; }
-                    .disclaimer { margin-top: 40px; padding: 16px; background: #fef3c7; border-radius: 8px; font-size: 0.85rem; color: #92400e; }
+                    .disclaimer { margin-top: 40px; padding: 16px; background: #fef3c7; border-radius: 8px; font-size: 0.8rem; color: #92400e; }
                     @media print { body { padding: 20px; } }
                 </style></head><body>
-                <h1>🏥 Diagnomass — Clinical AI Report</h1>
-                <p style="color:#64748b;">Generated: ${now}</p>
+                <h1>DIAGNOMASS — DERMA-VISION AI REPORT</h1>
+                <p style="color:#64748b; font-size:0.8rem; letter-spacing:1px;">GENERATED: ${now}</p>
                 <div class="row"><span class="label">Patient Age</span><span>${age}</span></div>
                 <div class="row"><span class="label">Biological Sex</span><span>${sex}</span></div>
                 <div class="row"><span class="label">Anatomical Site</span><span>${site}</span></div>
-                <div class="row"><span class="label">AI Model</span><span>Dual-Stream EfficientNet-B7 (99.41% AUC)</span></div>
+                <div class="row"><span class="label">AI Model</span><span>Dual-Stream EfficientNet-B7 (AUC 99.41%)</span></div>
                 <div class="diagnosis-box ${lastDiagnosis === 'Malignant' ? 'malignant' : 'benign'}">
-                    ${lastDiagnosis === 'Malignant' ? '🔴' : '🟢'} ${lastDiagnosis.toUpperCase()} — Confidence: ${lastConfidence.toFixed(1)}%
+                    ${lastDiagnosis.toUpperCase()} — CONFIDENCE: ${lastConfidence.toFixed(1)}%
                 </div>
                 <div class="disclaimer">
-                    <strong>⚠️ Legal Disclaimer:</strong> This report was generated by an AI research tool and does NOT constitute medical advice.
+                    <strong>⚠ LEGAL DISCLAIMER:</strong> This report was generated by an AI research tool and does NOT constitute medical advice.
                     All findings must be confirmed by histopathological biopsy. Diagnomass is intended for educational and research purposes only.
                 </div>
-                <p style="margin-top:24px; text-align:center; color:#94a3b8; font-size:0.8rem;">© 2026 Diagnomass | Derma-Vision AI</p>
+                <p style="margin-top:24px; text-align:center; color:#94a3b8; font-size:0.72rem; letter-spacing:1px;">© 2026 DIAGNOMASS · DERMA-VISION AI · NOT FOR CLINICAL USE</p>
                 </body></html>
             `);
             w.document.close();
             setTimeout(() => w.print(), 500);
         }
 
-        // --- Animate performance bars on load ---
+        // --- Animate bars on load ---
         window.addEventListener('load', () => {
             setTimeout(() => {
                 document.querySelectorAll('.bar-fill').forEach(bar => {
