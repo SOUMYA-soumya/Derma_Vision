@@ -1033,10 +1033,60 @@ window.runAnalysis=async function(){
 }
 
 function parseDiagnosis(raw,age,sex,site){
-  const isMal=raw.toLowerCase().includes('malignant');
-  const nm=raw.match(/([\d.]+)\s*%/);
-  let conf=nm?parseFloat(nm[1]):(isMal?87.5:12.5);
-  if(conf>100)conf=99;
+  // ── LOG RAW RESPONSE so you can inspect it in console (F12) ──
+  console.log('%c[Diagnomass] RAW API RESPONSE:', 'color:#0df2c8;font-weight:bold;font-size:13px', raw);
+  console.log('%c[Diagnomass] TYPE:', 'color:#0df2c8', typeof raw);
+  if(typeof raw === 'object') console.log('%c[Diagnomass] JSON:', 'color:#0df2c8', JSON.stringify(raw));
+
+  // ── ROBUST DETECTION ──
+  // Handle: string label, numeric class (0/1), confidence float (0.0-1.0), object, etc.
+  let isMal = false;
+  let conf = null;
+
+  if(typeof raw === 'number'){
+    // Backend returned a raw float probability (e.g. 0.87)
+    if(raw <= 1.0){
+      conf = raw * 100;
+      isMal = raw >= 0.5;
+    } else {
+      // Raw percentage like 87
+      conf = raw;
+      isMal = raw >= 50;
+    }
+  } else if(typeof raw === 'object' && raw !== null){
+    // Could be {label: "malignant", score: 0.87} or similar
+    const label = (raw.label || raw.class || raw.prediction || '').toString().toLowerCase();
+    const score = raw.score ?? raw.confidence ?? raw.probability ?? raw.prob ?? null;
+    isMal = label.includes('malignant') || label.includes('melanoma') || label.includes('mel')
+            || label === '1' || label === 'positive';
+    if(!isMal && label.includes('benign') || label === '0' || label === 'negative') isMal = false;
+    conf = score !== null ? (score <= 1 ? score * 100 : score) : null;
+  } else {
+    // String response — check for every possible malignant keyword
+    const s = raw.toString().toLowerCase();
+    isMal = s.includes('malignant')
+         || s.includes('melanoma')
+         || s.includes('mel ')
+         || s.includes('"mel"')
+         || s.includes("'mel'")
+         || s.includes('positive')
+         || s.includes('cancerous')
+         || s.includes('class 1')
+         || s.includes('class_1')
+         || /\blabel[:\s]+1\b/.test(s)
+         || /^1$/.test(s.trim());
+    // Extract any percentage or decimal probability
+    const pctMatch = s.match(/([\d.]+)\s*%/);
+    const decMatch = s.match(/\b0\.([\d]+)\b/);
+    if(pctMatch) conf = parseFloat(pctMatch[1]);
+    else if(decMatch) conf = parseFloat('0.'+decMatch[1]) * 100;
+  }
+
+  // Final confidence fallback
+  if(conf === null) conf = isMal ? 87.5 : 12.5;
+  if(conf > 100) conf = 99.9;
+
+  console.log('%c[Diagnomass] PARSED → isMalignant:', 'color:#0df2c8', isMal, '| confidence:', conf.toFixed(1)+'%');
   lastDiag=isMal?'Malignant':'Benign';lastConf=conf;
 
   const dot=document.getElementById('resultDot');
