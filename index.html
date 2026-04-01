@@ -1,827 +1,1190 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en" data-theme="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Diagnomass | Derma-Vision AI</title>
-    <meta name="description" content="AI-powered melanoma detection using Dual-Stream EfficientNet-B7 ensemble with 99.41% AUC. Research demonstration tool.">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        /* ========== DESIGN TOKENS ========== */
-        :root {
-            --primary: #0f766e;
-            --primary-light: #14b8a6;
-            --primary-ultra-light: #ccfbf1;
-            --accent: #0ea5e9;
-            --accent-light: #e0f2fe;
-            --bg-base: #f8fafc;
-            --bg-card: rgba(255, 255, 255, 0.65);
-            --bg-card-hover: rgba(255, 255, 255, 0.8);
-            --text-dark: #0f172a;
-            --text-muted: #64748b;
-            --text-light: #94a3b8;
-            --border-card: rgba(255, 255, 255, 0.8);
-            --border-input: #e2e8f0;
-            --danger: #e11d48;
-            --danger-bg: rgba(254, 226, 226, 0.8);
-            --danger-border: #fda4af;
-            --success: #059669;
-            --success-bg: rgba(209, 250, 229, 0.8);
-            --success-border: #6ee7b7;
-            --warning-bg: rgba(254, 243, 199, 0.8);
-            --warning-border: #fcd34d;
-            --warning-text: #b45309;
-            --shadow-card: 0 25px 50px -12px rgba(0, 0, 0, 0.08);
-            --shadow-btn: 0 10px 25px rgba(15, 118, 110, 0.25);
-            --orb1: #ccfbf1; --orb2: #e0f2fe; --orb3: #f0fdf4;
-            --ambient-bg: #f1f5f9;
-            --gauge-trail: #e2e8f0;
-            --modal-overlay: rgba(15, 23, 42, 0.6);
-        }
-
-        /* ========== DARK MODE ========== */
-        [data-theme="dark"] {
-            --bg-base: #0f172a;
-            --bg-card: rgba(30, 41, 59, 0.7);
-            --bg-card-hover: rgba(30, 41, 59, 0.9);
-            --text-dark: #f1f5f9;
-            --text-muted: #94a3b8;
-            --text-light: #64748b;
-            --border-card: rgba(51, 65, 85, 0.6);
-            --border-input: #334155;
-            --shadow-card: 0 25px 50px -12px rgba(0, 0, 0, 0.3);
-            --orb1: rgba(13, 148, 136, 0.15); --orb2: rgba(14, 165, 233, 0.1); --orb3: rgba(16, 185, 129, 0.1);
-            --ambient-bg: #0f172a;
-            --gauge-trail: #334155;
-            --modal-overlay: rgba(0, 0, 0, 0.75);
-        }
-
-        /* ========== RESET & BASE ========== */
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: 'Inter', sans-serif;
-            color: var(--text-dark);
-            background-color: var(--bg-base);
-            overflow-x: hidden;
-            scroll-behavior: smooth;
-            transition: background-color 0.4s, color 0.4s;
-        }
-
-        /* ========== AMBIENT BACKGROUND ========== */
-        .ambient-bg {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            z-index: -1; overflow: hidden; background: var(--ambient-bg);
-            transition: background 0.4s;
-        }
-        .orb {
-            position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.6;
-            animation: float 20s infinite ease-in-out alternate; transition: background 0.4s;
-        }
-        .orb-1 { width: 500px; height: 500px; background: var(--orb1); top: -100px; left: -100px; }
-        .orb-2 { width: 600px; height: 600px; background: var(--orb2); bottom: -200px; right: -100px; animation-delay: -5s; }
-        .orb-3 { width: 400px; height: 400px; background: var(--orb3); top: 40%; left: 30%; animation-delay: -10s; }
-        @keyframes float {
-            0% { transform: translate(0, 0) scale(1); }
-            100% { transform: translate(100px, 50px) scale(1.1); }
-        }
-
-        /* ========== HEADER ========== */
-        header {
-            background: var(--bg-card);
-            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-            padding: 16px 40px;
-            border-bottom: 1px solid var(--border-card);
-            display: flex; justify-content: space-between; align-items: center;
-            position: sticky; top: 0; z-index: 100;
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
-            transition: background 0.4s, border-color 0.4s;
-        }
-        .header-brand { display: flex; align-items: center; gap: 12px; }
-        .header-logo {
-            width: 36px; height: 36px; border-radius: 10px;
-            background: linear-gradient(135deg, var(--primary), var(--accent));
-            display: flex; align-items: center; justify-content: center;
-            color: white; font-weight: 800; font-size: 1rem;
-        }
-        header h1 {
-            font-size: 1.5rem; font-weight: 800; letter-spacing: -0.5px;
-            background: linear-gradient(135deg, var(--primary), var(--accent));
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        }
-        .header-right { display: flex; align-items: center; gap: 16px; }
-        .header-tag {
-            font-weight: 600; color: var(--primary); font-size: 0.8rem;
-            letter-spacing: 1.5px; text-transform: uppercase;
-        }
-
-        /* --- Dark Mode Toggle --- */
-        .theme-toggle {
-            width: 44px; height: 24px; border-radius: 12px; border: none; cursor: pointer;
-            background: var(--border-input); position: relative; transition: background 0.3s;
-        }
-        .theme-toggle::after {
-            content: '☀️'; position: absolute; top: 2px; left: 2px;
-            width: 20px; height: 20px; border-radius: 50%;
-            background: white; display: flex; align-items: center; justify-content: center;
-            font-size: 12px; transition: transform 0.3s, content 0.3s;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
-        }
-        [data-theme="dark"] .theme-toggle { background: var(--primary); }
-        [data-theme="dark"] .theme-toggle::after { transform: translateX(20px); content: '🌙'; }
-
-        /* ========== MAIN CONTAINER ========== */
-        .container {
-            max-width: 1200px; margin: 30px auto; padding: 0 20px;
-            display: flex; flex-direction: column; gap: 30px;
-        }
-
-        /* ========== GLASSMORPHISM CARDS ========== */
-        .card {
-            background: var(--bg-card);
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--border-card);
-            border-radius: 24px; padding: 36px;
-            box-shadow: var(--shadow-card), inset 0 1px 0 rgba(255, 255, 255, 0.2);
-            transition: background 0.4s, border-color 0.4s, box-shadow 0.4s;
-        }
-
-        /* ========== GRID LAYOUTS ========== */
-        .dashboard-grid {
-            display: grid; grid-template-columns: 1fr 1.2fr; gap: 30px;
-        }
-        @media (max-width: 968px) { .dashboard-grid { grid-template-columns: 1fr; } }
-
-        h2 { font-size: 1.6rem; margin-top: 0; margin-bottom: 4px; }
-        h3 { font-size: 1.1rem; color: var(--primary); border-bottom: 2px solid var(--border-input); padding-bottom: 8px; margin-top: 28px; }
-        p { line-height: 1.7; color: var(--text-muted); }
-
-        /* ========== DIAGNOSTIC FORM ========== */
-        .form-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 0.9rem; }
-        input[type="number"], select {
-            width: 100%; padding: 12px 14px; border: 2px solid var(--border-input); border-radius: 12px;
-            background-color: var(--bg-card); font-family: inherit; font-size: 0.95rem;
-            transition: all 0.3s; color: var(--text-dark);
-        }
-        input:focus, select:focus { outline: none; border-color: var(--primary-light); box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.1); }
-
-        /* --- Drag and Drop Zone --- */
-        .drop-zone {
-            width: 100%; min-height: 220px; border: 2px dashed var(--border-input); border-radius: 16px;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            margin-top: 8px; background: var(--bg-card); overflow: hidden; position: relative;
-            cursor: pointer; transition: all 0.3s ease; gap: 8px;
-        }
-        .drop-zone:hover, .drop-zone.drag-over {
-            border-color: var(--primary-light); background: var(--primary-ultra-light);
-            box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.08);
-        }
-        [data-theme="dark"] .drop-zone:hover, [data-theme="dark"] .drop-zone.drag-over {
-            background: rgba(20, 184, 166, 0.05);
-        }
-        .drop-zone-icon { font-size: 2.5rem; opacity: 0.5; }
-        .drop-zone-text { color: var(--text-light); font-weight: 500; font-size: 0.9rem; }
-        .drop-zone-hint { color: var(--text-light); font-size: 0.75rem; opacity: 0.6; }
-        .drop-zone input[type="file"] { display: none; }
-        .drop-zone img {
-            max-width: 100%; max-height: 200px; object-fit: contain;
-            display: none; border-radius: 8px;
-        }
-        .drop-zone.has-image .drop-zone-icon,
-        .drop-zone.has-image .drop-zone-text,
-        .drop-zone.has-image .drop-zone-hint { display: none; }
-
-        /* --- CTE Preview --- */
-        .preview-grid {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px;
-        }
-        .preview-panel {
-            border-radius: 12px; overflow: hidden; position: relative;
-            border: 1px solid var(--border-input); background: var(--bg-card);
-        }
-        .preview-panel img { width: 100%; height: 140px; object-fit: cover; display: block; }
-        .preview-panel-label {
-            position: absolute; bottom: 0; left: 0; right: 0;
-            background: linear-gradient(transparent, rgba(0,0,0,0.7));
-            color: white; font-size: 0.7rem; font-weight: 600; padding: 16px 10px 6px;
-            text-transform: uppercase; letter-spacing: 1px;
-        }
-
-        /* ========== BUTTONS ========== */
-        .btn-primary {
-            width: 100%; padding: 16px; background: linear-gradient(135deg, var(--primary), var(--primary-light));
-            color: white; border: none; border-radius: 12px; font-size: 1rem; font-weight: 700;
-            cursor: pointer; box-shadow: var(--shadow-btn); transition: all 0.3s ease; margin-top: 8px;
-        }
-        .btn-primary:hover { box-shadow: 0 15px 35px rgba(15, 118, 110, 0.35); transform: translateY(-2px); }
-        .btn-primary:disabled { background: var(--border-input); cursor: not-allowed; transform: none; box-shadow: none; }
-
-        .btn-secondary {
-            padding: 10px 20px; background: transparent; color: var(--primary);
-            border: 2px solid var(--primary); border-radius: 10px; font-size: 0.85rem; font-weight: 600;
-            cursor: pointer; transition: all 0.3s;
-        }
-        .btn-secondary:hover { background: var(--primary); color: white; }
-
-        /* ========== LOADER ========== */
-        .loader {
-            display: none; text-align: center; margin-top: 16px; color: var(--primary);
-            font-weight: 600; font-size: 0.9rem; animation: pulse 1.5s infinite;
-        }
-        @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
-
-        /* ========== RESULT: CONFIDENCE GAUGE ========== */
-        #resultBox {
-            margin-top: 20px; display: none; animation: slideUp 0.5s ease-out;
-            text-align: center;
-        }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
-        .gauge-wrapper {
-            display: flex; flex-direction: column; align-items: center; gap: 12px;
-            padding: 24px; border-radius: 20px;
-        }
-        .gauge-svg { width: 160px; height: 100px; }
-        .gauge-label { font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
-        .gauge-diagnosis { font-size: 1.4rem; font-weight: 800; }
-        .gauge-confidence-text { font-size: 0.85rem; color: var(--text-muted); }
-
-        .result-actions { display: flex; gap: 10px; margin-top: 12px; justify-content: center; }
-
-        /* ========== PERFORMANCE BARS ========== */
-        .performance-grid { margin-top: 24px; display: grid; gap: 16px; }
-        .bar-container {
-            width: 100%; background: var(--gauge-trail); border-radius: 10px; height: 22px;
-            position: relative; overflow: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
-        }
-        .bar-fill {
-            height: 100%; background: linear-gradient(90deg, var(--primary), var(--primary-light));
-            border-radius: 10px; width: 0; transition: width 1.5s cubic-bezier(0.22, 1, 0.36, 1);
-        }
-        .bar-label { display: flex; justify-content: space-between; margin-bottom: 6px; font-weight: 600; font-size: 0.88rem; }
-        .bar-percent { font-weight: 800; color: var(--primary); }
-
-        /* ========== ARCHITECTURE DIAGRAM ========== */
-        .arch-diagram {
-            display: flex; align-items: center; justify-content: center; gap: 0;
-            margin: 24px 0 8px; flex-wrap: wrap; padding: 16px 0;
-        }
-        .arch-node {
-            padding: 10px 14px; border-radius: 12px; font-size: 0.75rem; font-weight: 700;
-            text-align: center; position: relative; min-width: 90px;
-            transition: transform 0.3s, box-shadow 0.3s;
-        }
-        .arch-node:hover { transform: scale(1.08); }
-        .arch-input { background: var(--accent-light); color: var(--accent); border: 2px solid var(--accent); }
-        .arch-expert { background: var(--primary-ultra-light); color: var(--primary); border: 2px solid var(--primary); }
-        .arch-fusion { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; font-size: 0.8rem; }
-        .arch-output { background: #fef3c7; color: #92400e; border: 2px solid #f59e0b; }
-        .arch-arrow {
-            font-size: 1.2rem; color: var(--text-light); margin: 0 4px; font-weight: 300;
-        }
-        .arch-split { display: flex; flex-direction: column; gap: 8px; align-items: center; }
-
-        /* ========== ANATOMY SECTION ========== */
-        .anatomy-section {
-            display: flex; align-items: center; justify-content: center; gap: 40px;
-            background: linear-gradient(to right, var(--bg-card), rgba(224, 242, 254, 0.15));
-        }
-        .anatomy-wrapper { position: relative; height: 350px; width: 180px; flex-shrink: 0; }
-        .silhouette {
-            width: 100%; height: 100%;
-            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 500"><path fill="%23cbd5e1" d="M100 20c-15 0-25 12-25 28s10 28 25 28 25-12 25-28-10-28-25-28zm-35 65c-15 0-25 10-25 25v120c0 10 15 10 15 0v-100h10v200c0 15 20 15 20 0v-120h10v120c0 15 20 15 20 0V110h10v100c0 10 15 10 15 0v-120c0-15-10-25-25-25H65z"/></svg>') no-repeat center center;
-            background-size: contain; opacity: 0.7;
-        }
-        .node {
-            position: absolute; width: 14px; height: 14px; background: var(--accent);
-            border-radius: 50%; box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.7);
-            animation: pulse-node 2s infinite; cursor: pointer;
-        }
-        .node::after {
-            content: attr(data-label); position: absolute; left: 22px; top: -4px;
-            background: var(--bg-card); padding: 3px 8px; border-radius: 6px;
-            font-size: 0.72rem; font-weight: 600; color: var(--text-dark);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1); white-space: nowrap; pointer-events: none;
-        }
-        .node-head { top: 12%; left: 47%; }
-        .node-torso { top: 35%; left: 47%; }
-        .node-upper { top: 30%; left: 20%; }
-        .node-lower { top: 70%; left: 35%; }
-        @keyframes pulse-node {
-            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.7); }
-            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(14, 165, 233, 0); }
-            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(14, 165, 233, 0); }
-        }
-        .anatomy-text { flex: 1; }
-        @media (max-width: 768px) { .anatomy-section { flex-direction: column; } }
-
-        /* ========== SCAN HISTORY LOG ========== */
-        .history-section { }
-        .history-header { display: flex; justify-content: space-between; align-items: center; }
-        .history-list { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; max-height: 300px; overflow-y: auto; }
-        .history-item {
-            display: flex; align-items: center; gap: 14px;
-            padding: 12px; border-radius: 14px; border: 1px solid var(--border-input);
-            background: var(--bg-card); transition: background 0.2s;
-        }
-        .history-item:hover { background: var(--bg-card-hover); }
-        .history-thumb {
-            width: 48px; height: 48px; border-radius: 10px; object-fit: cover;
-            border: 1px solid var(--border-input); flex-shrink: 0;
-        }
-        .history-info { flex: 1; }
-        .history-diag { font-weight: 700; font-size: 0.88rem; }
-        .history-meta { font-size: 0.75rem; color: var(--text-light); margin-top: 2px; }
-        .history-badge {
-            padding: 4px 10px; border-radius: 8px; font-size: 0.72rem; font-weight: 700;
-            flex-shrink: 0; text-transform: uppercase; letter-spacing: 0.5px;
-        }
-        .badge-benign { background: var(--success-bg); color: var(--success); }
-        .badge-malignant { background: var(--danger-bg); color: var(--danger); }
-        .history-empty { text-align: center; color: var(--text-light); font-size: 0.85rem; padding: 24px 0; }
-
-        /* ========== DISCLAIMER MODAL ========== */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: var(--modal-overlay); z-index: 1000;
-            display: flex; align-items: center; justify-content: center;
-            backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
-            animation: fadeIn 0.3s ease;
-        }
-        .modal-overlay.hidden { display: none; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .modal-box {
-            background: var(--bg-card); backdrop-filter: blur(20px);
-            border: 1px solid var(--border-card); border-radius: 24px;
-            padding: 40px; max-width: 520px; width: 90%; text-align: center;
-            box-shadow: 0 30px 60px rgba(0,0,0,0.2);
-        }
-        .modal-icon { font-size: 3rem; margin-bottom: 16px; }
-        .modal-box h2 { margin-bottom: 16px; font-size: 1.4rem; }
-        .modal-box p { font-size: 0.9rem; line-height: 1.8; margin-bottom: 24px; }
-        .modal-box .btn-primary { width: auto; padding: 14px 40px; display: inline-block; }
-
-        /* ========== FOOTER ========== */
-        .footer { text-align: center; margin: 30px 0; font-size: 0.8rem; color: var(--text-light); }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diagnomass | Derma-Vision AI</title>
+<meta name="description" content="AI-powered melanoma detection using Dual-Stream EfficientNet-B7 ensemble with 99.41% AUC.">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* ─── TOKENS ─────────────────────────────────────────────── */
+:root {
+  --c-teal:       #0df2c8;
+  --c-teal-mid:   #09c4a0;
+  --c-teal-dim:   rgba(13,242,200,.12);
+  --c-teal-glow:  rgba(13,242,200,.25);
+  --c-blue:       #3d8bff;
+  --c-blue-dim:   rgba(61,139,255,.12);
+  --c-red:        #ff4d6d;
+  --c-red-dim:    rgba(255,77,109,.12);
+  --c-amber:      #ffb830;
+  --c-amber-dim:  rgba(255,184,48,.1);
+  --bg-0:  #030912;
+  --bg-1:  #060e1c;
+  --bg-2:  #0b1628;
+  --bg-3:  #101e34;
+  --bg-4:  #172540;
+  --bd-subtle:  rgba(13,242,200,.07);
+  --bd-soft:    rgba(13,242,200,.15);
+  --bd-mid:     rgba(13,242,200,.3);
+  --bd-strong:  rgba(13,242,200,.55);
+  --tx-1: #e4f4f0;
+  --tx-2: #7eb8aa;
+  --tx-3: #3d7066;
+  --tx-mono: #0df2c8;
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 18px;
+  --shadow-teal: 0 0 24px rgba(13,242,200,.18);
+  --shadow-card: 0 8px 40px rgba(0,0,0,.45);
+}
+[data-theme="light"] {
+  --bg-0:  #eef4f2;
+  --bg-1:  #f5faf8;
+  --bg-2:  #ffffff;
+  --bg-3:  #f0f9f6;
+  --bg-4:  #e6f4ef;
+  --bd-subtle: rgba(0,110,88,.06);
+  --bd-soft:   rgba(0,110,88,.14);
+  --bd-mid:    rgba(0,110,88,.28);
+  --bd-strong: rgba(0,110,88,.5);
+  --tx-1: #0a1f1a;
+  --tx-2: #2d6b5e;
+  --tx-3: #7aada3;
+  --tx-mono: #006e58;
+  --c-teal: #006e58;
+  --c-teal-mid: #008c6e;
+  --c-teal-dim: rgba(0,110,88,.08);
+  --c-teal-glow: rgba(0,110,88,.2);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Outfit',sans-serif;
+  background:var(--bg-0);
+  color:var(--tx-1);
+  overflow-x:hidden;
+  transition:background .4s,color .4s;
+  min-height:100vh;
+}
+#bgCanvas{
+  position:fixed;top:0;left:0;
+  width:100%;height:100%;
+  z-index:0;pointer-events:none;
+  opacity:.55;
+}
+/* ─── HEADER ─── */
+header{
+  position:sticky;top:0;z-index:100;
+  height:58px;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 28px;
+  background:rgba(3,9,18,.9);
+  backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--bd-subtle);
+}
+[data-theme="light"] header{background:rgba(238,244,242,.94)}
+.brand{display:flex;align-items:center;gap:10px}
+.brand-mark{
+  width:32px;height:32px;border-radius:7px;
+  background:var(--bg-2);border:1px solid var(--bd-mid);
+  display:grid;place-items:center;
+  box-shadow:var(--shadow-teal);
+}
+.brand-mark svg{width:18px;height:18px}
+.brand-name{
+  font-family:'Outfit',sans-serif;
+  font-size:1rem;font-weight:800;
+  letter-spacing:2.5px;text-transform:uppercase;color:var(--tx-1);
+}
+.brand-sub{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.55rem;color:var(--c-teal);
+  letter-spacing:2px;text-transform:uppercase;
+  display:block;margin-top:-1px;opacity:.8;
+}
+.h-center{display:flex;align-items:center;gap:8px}
+.pulse-ring{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--c-teal);
+  animation:ring 2.2s infinite;
+}
+@keyframes ring{
+  0%{box-shadow:0 0 0 0 var(--c-teal-glow)}
+  70%{box-shadow:0 0 0 8px rgba(13,242,200,0)}
+  100%{box-shadow:0 0 0 0 rgba(13,242,200,0)}
+}
+.h-status{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.62rem;color:var(--tx-2);letter-spacing:1.2px;
+}
+.h-status b{color:var(--c-teal)}
+.h-right{display:flex;align-items:center;gap:14px}
+.auc-pill{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.62rem;letter-spacing:1px;
+  padding:4px 12px;border-radius:4px;
+  background:var(--c-teal-dim);border:1px solid var(--bd-soft);color:var(--c-teal);
+}
+.toggle-btn{
+  width:40px;height:22px;border-radius:11px;
+  background:var(--bg-3);border:1px solid var(--bd-soft);
+  cursor:pointer;position:relative;transition:background .3s;
+}
+.toggle-btn::after{
+  content:'';position:absolute;
+  top:3px;left:3px;width:16px;height:16px;
+  border-radius:50%;background:var(--c-teal);
+  box-shadow:0 0 6px var(--c-teal-glow);
+  transition:transform .3s;
+}
+[data-theme="light"] .toggle-btn::after{transform:translateX(18px)}
+/* ─── STAT RIBBON ─── */
+.stat-ribbon{
+  position:relative;z-index:1;
+  display:grid;grid-template-columns:repeat(4,1fr);
+  background:var(--bg-1);
+  border-bottom:1px solid var(--bd-subtle);
+}
+.stat-cell{
+  padding:14px 28px;
+  border-right:1px solid var(--bd-subtle);
+  position:relative;overflow:hidden;
+}
+.stat-cell:last-child{border-right:none}
+.stat-cell::after{
+  content:'';position:absolute;
+  top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--c-teal),transparent);
+  opacity:0;transition:opacity .4s;
+}
+.stat-cell:hover::after{opacity:1}
+.stat-n{
+  font-family:'JetBrains Mono',monospace;
+  font-size:1.3rem;font-weight:700;
+  color:var(--c-teal);line-height:1;
+}
+.stat-l{font-size:.67rem;color:var(--tx-3);margin-top:3px;letter-spacing:.8px;text-transform:uppercase}
+@media(max-width:640px){.stat-ribbon{grid-template-columns:1fr 1fr}}
+/* ─── LAYOUT ─── */
+.wrap{
+  position:relative;z-index:1;
+  max-width:1320px;margin:0 auto;
+  padding:24px 20px 40px;
+  display:flex;flex-direction:column;gap:20px;
+}
+.top-grid{
+  display:grid;
+  grid-template-columns:1.05fr 1fr 1fr;
+  gap:20px;
+}
+@media(max-width:1100px){.top-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:680px){.top-grid{grid-template-columns:1fr}}
+/* ─── CARD ─── */
+.card{
+  background:var(--bg-2);
+  border:1px solid var(--bd-subtle);
+  border-radius:var(--r-lg);
+  display:flex;flex-direction:column;
+  overflow:hidden;
+  box-shadow:var(--shadow-card);
+  transition:border-color .3s;
+}
+.card:hover{border-color:var(--bd-soft)}
+.card-bar{
+  display:flex;align-items:center;gap:9px;
+  padding:13px 20px;
+  background:var(--bg-1);
+  border-bottom:1px solid var(--bd-subtle);
+  flex-shrink:0;
+}
+.card-dot{
+  width:7px;height:7px;border-radius:50%;
+  background:var(--c-teal);box-shadow:0 0 5px var(--c-teal);
+}
+.card-dot.blue{background:var(--c-blue);box-shadow:0 0 5px var(--c-blue)}
+.card-dot.amber{background:var(--c-amber);box-shadow:0 0 5px var(--c-amber)}
+.card-ttl{
+  font-family:'Outfit',sans-serif;
+  font-size:.72rem;font-weight:700;
+  letter-spacing:2px;text-transform:uppercase;color:var(--tx-1);
+}
+.card-tag{
+  margin-left:auto;
+  font-family:'JetBrains Mono',monospace;
+  font-size:.55rem;color:var(--tx-3);letter-spacing:1px;
+}
+.card-body{padding:20px;flex:1}
+/* ─── FORM ─── */
+.fgrp{margin-bottom:16px}
+.flabel{
+  display:flex;align-items:center;gap:5px;
+  margin-bottom:7px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:.62rem;color:var(--tx-2);
+  letter-spacing:1.5px;text-transform:uppercase;
+}
+.flabel::before{content:'›';color:var(--c-teal);font-size:.7rem}
+input[type=number],select{
+  width:100%;padding:10px 13px;
+  background:var(--bg-1);
+  border:1px solid var(--bd-subtle);
+  border-radius:var(--r-sm);
+  color:var(--tx-1);
+  font-family:'JetBrains Mono',monospace;
+  font-size:.78rem;
+  transition:all .25s;
+  appearance:none;-webkit-appearance:none;
+}
+input[type=number]:focus,select:focus{
+  outline:none;border-color:var(--c-teal);
+  box-shadow:0 0 0 3px var(--c-teal-dim);background:var(--bg-3);
+}
+select{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath fill='%230df2c8' d='M5 6 0 0h10z'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 13px center;
+  padding-right:34px;cursor:pointer;
+}
+[data-theme="light"] select{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath fill='%23006e58' d='M5 6 0 0h10z'/%3E%3C/svg%3E");
+}
+select option{background:var(--bg-1)}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+/* ─── DROP ZONE ─── */
+.dz{
+  width:100%;min-height:180px;
+  border:1px dashed var(--bd-soft);
+  border-radius:var(--r-md);
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  gap:7px;cursor:pointer;
+  background:var(--bg-1);
+  position:relative;overflow:hidden;
+  transition:all .3s;
+}
+.dz-scan{
+  position:absolute;top:-2px;left:0;
+  width:100%;height:2px;
+  background:linear-gradient(90deg,transparent,var(--c-teal),transparent);
+  animation:scan 2.8s linear infinite;
+  opacity:0;transition:opacity .3s;
+}
+.dz:hover .dz-scan,.dz.over .dz-scan{opacity:1}
+@keyframes scan{0%{top:-2px}100%{top:calc(100% + 2px)}}
+.dz:hover,.dz.over{
+  border-color:var(--c-teal);
+  background:var(--c-teal-dim);
+  box-shadow:0 0 20px var(--c-teal-dim) inset;
+}
+.dz input{display:none}
+.dz-ico{font-size:1.8rem;opacity:.35}
+.dz-txt{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.65rem;color:var(--c-teal);letter-spacing:1.5px;
+}
+.dz-hint{font-size:.6rem;color:var(--tx-3);font-family:'JetBrains Mono',monospace}
+.dz img{
+  max-width:100%;max-height:175px;
+  object-fit:contain;display:none;
+  border-radius:6px;position:relative;z-index:1;
+}
+.dz.has-img .dz-ico,.dz.has-img .dz-txt,.dz.has-img .dz-hint{display:none}
+/* CTE */
+.cte-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.cte-panel{border-radius:8px;overflow:hidden;border:1px solid var(--bd-subtle);position:relative}
+.cte-panel img,.cte-panel canvas{width:100%;height:110px;object-fit:cover;display:block}
+.cte-lbl{
+  position:absolute;bottom:0;left:0;right:0;
+  background:linear-gradient(transparent,rgba(0,0,0,.8));
+  padding:14px 8px 5px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:.55rem;color:var(--c-teal);
+  letter-spacing:2px;text-transform:uppercase;
+}
+/* ─── BUTTON ─── */
+.btn-run{
+  width:100%;margin-top:12px;padding:13px;
+  border:1px solid var(--c-teal);
+  border-radius:var(--r-sm);background:transparent;
+  color:var(--c-teal);
+  font-family:'JetBrains Mono',monospace;
+  font-size:.75rem;font-weight:700;
+  letter-spacing:2.5px;text-transform:uppercase;
+  cursor:pointer;position:relative;overflow:hidden;transition:all .3s;
+}
+.btn-run::before{
+  content:'';position:absolute;
+  top:0;left:-100%;width:100%;height:100%;
+  background:linear-gradient(90deg,transparent,var(--c-teal-glow),transparent);
+  transition:left .4s;
+}
+.btn-run:hover::before{left:100%}
+.btn-run:hover{background:var(--c-teal-dim);box-shadow:0 0 20px var(--c-teal-glow)}
+.btn-run:disabled{opacity:.25;cursor:not-allowed}
+.btn-run:disabled:hover::before{left:-100%}
+.btn-run:disabled:hover{background:transparent;box-shadow:none}
+.btn-sm{
+  padding:7px 16px;
+  border:1px solid var(--bd-soft);
+  border-radius:5px;background:transparent;
+  color:var(--tx-2);
+  font-family:'JetBrains Mono',monospace;
+  font-size:.6rem;letter-spacing:1px;text-transform:uppercase;
+  cursor:pointer;transition:all .25s;
+}
+.btn-sm:hover{border-color:var(--c-teal);color:var(--c-teal);background:var(--c-teal-dim)}
+/* ─── RESULT PANEL ─── */
+.result-panel{display:flex;flex-direction:column;min-height:0}
+.idle-state{
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  gap:16px;padding:28px;
+}
+.idle-rings{position:relative;width:80px;height:80px;flex-shrink:0}
+.idle-ring{
+  position:absolute;border-radius:50%;
+  border:1px solid var(--bd-soft);
+  animation:idle-expand 3s ease-out infinite;
+}
+.idle-ring:nth-child(1){width:80px;height:80px;top:0;left:0;animation-delay:0s}
+.idle-ring:nth-child(2){width:56px;height:56px;top:12px;left:12px;animation-delay:.5s}
+.idle-ring:nth-child(3){width:32px;height:32px;top:24px;left:24px;animation-delay:1s;background:var(--c-teal-dim)}
+@keyframes idle-expand{
+  0%{opacity:.6;transform:scale(1)}
+  50%{opacity:.2;transform:scale(1.08)}
+  100%{opacity:.6;transform:scale(1)}
+}
+.idle-label{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.62rem;color:var(--tx-3);
+  letter-spacing:2px;text-align:center;line-height:2;
+}
+/* Loading */
+.result-loading{
+  flex:1;display:none;flex-direction:column;
+  align-items:center;justify-content:center;
+  gap:14px;padding:24px;
+}
+.result-loading.show{display:flex}
+.loading-orb{
+  width:60px;height:60px;border-radius:50%;
+  border:2px solid var(--bd-soft);
+  border-top-color:var(--c-teal);
+  animation:spin 1s linear infinite;
+  box-shadow:0 0 20px var(--c-teal-dim);
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-txt{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.62rem;color:var(--c-teal);
+  letter-spacing:2px;text-align:center;line-height:2;
+}
+.loading-bar{width:80%;height:2px;background:var(--bg-3);border-radius:1px;overflow:hidden}
+.loading-bar-fill{
+  height:100%;
+  background:linear-gradient(90deg,transparent,var(--c-teal),transparent);
+  animation:lscan 1.6s ease-in-out infinite;
+}
+@keyframes lscan{
+  0%{transform:translateX(-100%) scaleX(1)}
+  100%{transform:translateX(300%) scaleX(1.5)}
+}
+/* Active result */
+.active-result{
+  flex:1;display:none;flex-direction:column;
+  align-items:center;padding:20px;gap:0;
+}
+.active-result.show{display:flex;animation:pop-in .5s cubic-bezier(.22,1,.36,1)}
+@keyframes pop-in{
+  from{opacity:0;transform:scale(.96) translateY(10px)}
+  to{opacity:1;transform:scale(1) translateY(0)}
+}
+.gauge-wrap{width:100%;display:flex;justify-content:center;margin-bottom:4px}
+.gauge-svg{width:180px;height:110px}
+.risk-bar-wrap{width:100%;margin:8px 0}
+.risk-bar-track{height:5px;width:100%;background:var(--bg-3);border-radius:3px;overflow:hidden}
+.risk-bar-fill{height:100%;width:0%;border-radius:3px;transition:width 1.4s cubic-bezier(.22,1,.36,1);box-shadow:0 0 8px currentColor}
+.diag-card{
+  width:100%;border-radius:var(--r-md);
+  border:1px solid var(--bd-soft);background:var(--bg-1);
+  padding:16px;margin-top:12px;position:relative;overflow:hidden;
+}
+.diag-card::before{
+  content:'';position:absolute;
+  top:0;left:0;right:0;height:2px;
+  background:currentColor;opacity:.6;
+}
+.diag-verdict{
+  font-family:'Outfit',sans-serif;
+  font-size:1.2rem;font-weight:900;
+  letter-spacing:1px;line-height:1;margin-bottom:4px;
+}
+.diag-conf{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.65rem;color:var(--tx-2);letter-spacing:1px;
+}
+.diag-meta{margin-top:10px;display:flex;flex-wrap:wrap;gap:6px}
+.diag-chip{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.58rem;padding:3px 9px;
+  border-radius:4px;border:1px solid var(--bd-subtle);
+  color:var(--tx-2);background:var(--bg-2);letter-spacing:.8px;
+}
+.result-actions{display:flex;gap:8px;margin-top:12px;width:100%;justify-content:center}
+/* ─── METRICS ─── */
+.metrics-list{display:flex;flex-direction:column;gap:16px;margin-top:4px}
+.metric-hd{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.metric-name{font-size:.78rem;color:var(--tx-2);font-weight:500}
+.metric-val{font-family:'JetBrains Mono',monospace;font-size:.78rem;color:var(--c-teal);font-weight:700}
+.metric-track{height:3px;background:var(--bg-3);border-radius:2px;overflow:hidden}
+.metric-fill{
+  height:100%;width:0%;
+  background:linear-gradient(90deg,var(--c-teal),var(--c-blue));
+  border-radius:2px;
+  transition:width 2s cubic-bezier(.22,1,.36,1);
+  box-shadow:0 0 6px var(--c-teal-glow);
+}
+/* arch */
+.arch{display:flex;align-items:center;justify-content:center;gap:5px;padding:18px 0;flex-wrap:wrap}
+.anode{
+  padding:8px 12px;border-radius:7px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:.58rem;text-align:center;line-height:1.7;
+  border:1px solid var(--bd-subtle);
+  background:var(--bg-1);color:var(--tx-2);
+  min-width:72px;transition:all .25s;cursor:default;
+}
+.anode:hover{transform:scale(1.06)}
+.anode.in{border-color:var(--c-blue);color:var(--c-blue)}
+.anode.ex{border-color:var(--c-teal);color:var(--c-teal)}
+.anode.fu{
+  border-color:var(--c-teal);color:var(--tx-1);
+  background:linear-gradient(135deg,var(--c-teal-dim),var(--c-blue-dim));
+  box-shadow:0 0 14px var(--c-teal-dim);
+}
+.anode.out{border-color:var(--c-amber);color:var(--c-amber)}
+.arr{color:var(--tx-3);font-size:.9rem;flex-shrink:0}
+.split{display:flex;flex-direction:column;gap:5px}
+/* ─── ANATOMY ─── */
+.anat-inner{display:flex;align-items:center;gap:36px;padding:0}
+@media(max-width:700px){.anat-inner{flex-direction:column}}
+.anat-fig{position:relative;width:150px;height:320px;flex-shrink:0}
+.anat-sil{
+  width:100%;height:100%;
+  background:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 500"><path fill="%231a2d3d" d="M100 20c-15 0-25 12-25 28s10 28 25 28 25-12 25-28-10-28-25-28zm-35 65c-15 0-25 10-25 25v120c0 10 15 10 15 0v-100h10v200c0 15 20 15 20 0v-120h10v120c0 15 20 15 20 0V110h10v100c0 10 15 10 15 0v-120c0-15-10-25-25-25H65z"/></svg>') no-repeat center;
+  background-size:contain;opacity:.55;
+}
+.anode-pt{
+  position:absolute;width:11px;height:11px;
+  background:var(--c-teal);border-radius:50%;
+  box-shadow:0 0 0 0 var(--c-teal-glow);
+  animation:nring 2.2s infinite;cursor:pointer;
+}
+.anode-pt::after{
+  content:attr(data-l);
+  position:absolute;left:18px;top:-4px;
+  background:var(--bg-3);border:1px solid var(--bd-soft);
+  padding:3px 9px;border-radius:4px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:.55rem;color:var(--c-teal);white-space:nowrap;
+  letter-spacing:1px;pointer-events:none;
+}
+.anode-pt.n-head{top:10%;left:46%}
+.anode-pt.n-torso{top:36%;left:46%}
+.anode-pt.n-upper{top:29%;left:12%}
+.anode-pt.n-lower{top:68%;left:36%}
+@keyframes nring{
+  0%{box-shadow:0 0 0 0 rgba(13,242,200,.6)}
+  70%{box-shadow:0 0 0 9px rgba(13,242,200,0)}
+  100%{box-shadow:0 0 0 0 rgba(13,242,200,0)}
+}
+.anat-info{flex:1}
+.anat-rows{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.anat-row{
+  display:flex;gap:12px;align-items:flex-start;
+  padding:10px 12px;border-radius:8px;
+  border:1px solid var(--bd-subtle);background:var(--bg-1);
+  transition:border-color .25s;
+}
+.anat-row:hover{border-color:var(--bd-soft)}
+.anat-tag{font-family:'JetBrains Mono',monospace;font-size:.58rem;color:var(--c-teal);letter-spacing:1px;white-space:nowrap;margin-top:1px}
+.anat-desc{font-size:.78rem;color:var(--tx-2);line-height:1.5}
+.anat-desc b{color:var(--tx-1)}
+/* ─── HISTORY ─── */
+.hist-bar{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:12px 20px;font-size:.78rem;color:var(--tx-2);
+  border-bottom:1px solid var(--bd-subtle);
+}
+.hist-list{max-height:280px;overflow-y:auto}
+.hist-list::-webkit-scrollbar{width:3px}
+.hist-list::-webkit-scrollbar-thumb{background:var(--bd-soft);border-radius:2px}
+.hist-item{
+  display:flex;align-items:center;gap:14px;
+  padding:12px 20px;
+  border-bottom:1px solid var(--bd-subtle);
+  transition:background .2s;
+}
+.hist-item:hover{background:var(--bg-3)}
+.hist-thumb{width:42px;height:42px;border-radius:7px;object-fit:cover;border:1px solid var(--bd-subtle);flex-shrink:0;filter:saturate(.7)}
+.hist-diag{font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--tx-1);font-weight:700}
+.hist-meta{font-size:.65rem;color:var(--tx-3);margin-top:3px;letter-spacing:.4px}
+.hist-badge{
+  margin-left:auto;flex-shrink:0;
+  padding:4px 11px;border-radius:4px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:.58rem;font-weight:700;
+  text-transform:uppercase;letter-spacing:.8px;border:1px solid;
+}
+.hb-b{color:var(--c-teal);border-color:var(--c-teal);background:var(--c-teal-dim)}
+.hb-m{color:var(--c-red);border-color:var(--c-red);background:var(--c-red-dim)}
+.hist-empty{
+  text-align:center;padding:36px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:.62rem;color:var(--tx-3);letter-spacing:1.5px;
+}
+/* ─── TYPOGRAPHY ─── */
+.eyebrow{font-family:'JetBrains Mono',monospace;font-size:.58rem;color:var(--c-teal);letter-spacing:3px;text-transform:uppercase;margin-bottom:5px}
+h2{font-family:'Outfit',sans-serif;font-size:1.2rem;font-weight:800;color:var(--tx-1);margin-bottom:8px}
+p{font-size:.82rem;line-height:1.75;color:var(--tx-2)}
+/* ─── MODAL ─── */
+.modal-ov{
+  position:fixed;inset:0;z-index:500;
+  background:rgba(0,0,0,.88);
+  backdrop-filter:blur(14px);
+  display:flex;align-items:center;justify-content:center;
+  animation:fade .3s ease;
+}
+.modal-ov.hidden{display:none}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.modal-box{
+  background:var(--bg-2);border:1px solid var(--bd-mid);
+  border-radius:var(--r-lg);padding:44px 36px;
+  max-width:480px;width:90%;text-align:center;
+  box-shadow:0 0 60px var(--c-teal-glow),var(--shadow-card);
+}
+.modal-ico{font-size:2.4rem;margin-bottom:14px}
+.modal-box h2{margin-bottom:12px}
+.modal-box p{margin-bottom:24px;font-size:.82rem}
+.modal-box .btn-run{width:auto;padding:12px 36px;display:inline-block}
+/* ─── FOOTER ─── */
+footer{
+  position:relative;z-index:1;
+  display:flex;justify-content:space-between;align-items:center;
+  padding:18px 28px;background:var(--bg-1);
+  border-top:1px solid var(--bd-subtle);
+  font-family:'JetBrains Mono',monospace;
+  font-size:.58rem;color:var(--tx-3);letter-spacing:.8px;
+}
+@media(max-width:600px){footer{flex-direction:column;gap:6px;text-align:center}}
+.sep{height:1px;background:linear-gradient(90deg,transparent,var(--bd-soft),transparent);margin:16px 0}
+</style>
 </head>
 <body>
 
-    <div class="modal-overlay" id="disclaimerModal">
-        <div class="modal-box">
-            <div class="modal-icon">⚠️</div>
-            <h2>Clinical Disclaimer</h2>
-            <p>
-                This system is an <strong>AI research demonstration tool</strong> and does <strong>not</strong> constitute medical advice, diagnosis, or treatment recommendation.
-                All findings generated by Derma-Vision must be confirmed by <strong>histopathological biopsy</strong> performed by a licensed dermatologist.
-                <br><br>
-                By proceeding, you acknowledge that this tool is intended for <strong>educational and research purposes only</strong>.
-            </p>
-            <button class="btn-primary" onclick="acceptDisclaimer()">I Understand — Proceed</button>
+<!-- MODAL -->
+<div class="modal-ov" id="modal">
+  <div class="modal-box">
+    <div class="modal-ico">⚠️</div>
+    <h2>Clinical Disclaimer</h2>
+    <p>This system is an <strong>AI research demonstration tool</strong> and does <strong>not</strong> constitute medical advice, diagnosis, or treatment. All findings must be confirmed by <strong>histopathological biopsy</strong> by a licensed dermatologist.<br><br>By proceeding you acknowledge this is for <strong>educational &amp; research purposes only</strong>.</p>
+    <button class="btn-run" onclick="acceptModal()">// ACKNOWLEDGE &amp; PROCEED</button>
+  </div>
+</div>
+
+<canvas id="bgCanvas"></canvas>
+
+<!-- HEADER -->
+<header>
+  <div class="brand">
+    <div class="brand-mark">
+      <svg viewBox="0 0 24 24" fill="none">
+        <path d="M12 2 2 7l10 5 10-5-10-5z" stroke="#0df2c8" stroke-width="1.5" stroke-linejoin="round"/>
+        <path d="M2 17l10 5 10-5" stroke="#0df2c8" stroke-width="1.5" stroke-linejoin="round"/>
+        <path d="M2 12l10 5 10-5" stroke="#3d8bff" stroke-width="1.5" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div>
+      <span class="brand-name">Diagnomass</span>
+      <span class="brand-sub">Derma-Vision AI · v2.5</span>
+    </div>
+  </div>
+  <div class="h-center">
+    <div class="pulse-ring"></div>
+    <span class="h-status">SYSTEM <b>ONLINE</b> · MODEL READY</span>
+  </div>
+  <div class="h-right">
+    <span class="auc-pill">AUC 0.9941</span>
+    <button class="toggle-btn" onclick="toggleTheme()" title="Toggle theme"></button>
+  </div>
+</header>
+
+<!-- STAT RIBBON -->
+<div class="stat-ribbon">
+  <div class="stat-cell"><div class="stat-n">99.41%</div><div class="stat-l">Validation AUC</div></div>
+  <div class="stat-cell"><div class="stat-n">96.59%</div><div class="stat-l">F1-Score Accuracy</div></div>
+  <div class="stat-cell"><div class="stat-n">97.80%</div><div class="stat-l">Clinical Sensitivity</div></div>
+  <div class="stat-cell"><div class="stat-n">B7×2</div><div class="stat-l">EfficientNet Ensemble</div></div>
+</div>
+
+<div class="wrap">
+
+  <!-- TOP 3-COL GRID -->
+  <div class="top-grid">
+
+    <!-- COL 1: INPUT -->
+    <div class="card">
+      <div class="card-bar">
+        <div class="card-dot"></div>
+        <span class="card-ttl">Diagnostic Input</span>
+        <span class="card-tag">UPLOAD · METADATA</span>
+      </div>
+      <div class="card-body">
+        <div class="fgrp">
+          <div class="flabel">Dermoscopic Image</div>
+          <div class="dz" id="dz">
+            <div class="dz-scan"></div>
+            <input type="file" id="fileIn" accept="image/png,image/jpeg">
+            <span class="dz-ico">⬡</span>
+            <span class="dz-txt">DRAG · DROP · OR CLICK</span>
+            <span class="dz-hint">JPG / PNG — MAX 10MB</span>
+            <img id="imgPrev" src="" alt="Lesion">
+          </div>
         </div>
+        <div id="cteWrap" style="display:none">
+          <div class="cte-grid">
+            <div class="cte-panel">
+              <img id="rgbImg" src="" alt="RGB">
+              <div class="cte-lbl">RGB INPUT</div>
+            </div>
+            <div class="cte-panel">
+              <canvas id="cteCanvas" width="400" height="400"></canvas>
+              <div class="cte-lbl">CTE FEATURE MAP</div>
+            </div>
+          </div>
+        </div>
+        <div class="sep"></div>
+        <div class="two-col">
+          <div class="fgrp">
+            <div class="flabel">Age</div>
+            <input type="number" id="ageIn" value="50" min="0" max="120">
+          </div>
+          <div class="fgrp">
+            <div class="flabel">Biological Sex</div>
+            <select id="sexIn">
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+            </select>
+          </div>
+        </div>
+        <div class="fgrp">
+          <div class="flabel">Anatomical Site</div>
+          <select id="siteIn">
+            <option value="Head/Neck">Head / Neck</option>
+            <option value="Lower Extremity">Lower Extremity (Legs)</option>
+            <option value="Oral/Genital">Oral / Genital</option>
+            <option value="Palms/Soles">Palms / Soles</option>
+            <option value="Torso" selected>Torso (Chest / Back / Abdomen)</option>
+            <option value="Upper Extremity">Upper Extremity (Arms)</option>
+          </select>
+        </div>
+        <button class="btn-run" id="runBtn" onclick="runAnalysis()">⚡ INITIATE AI ANALYSIS</button>
+      </div>
     </div>
 
-    <div class="ambient-bg">
-        <div class="orb orb-1"></div>
-        <div class="orb orb-2"></div>
-        <div class="orb orb-3"></div>
+    <!-- COL 2: RESULT (always visible) -->
+    <div class="card result-panel">
+      <div class="card-bar">
+        <div class="card-dot" id="resultDot"></div>
+        <span class="card-ttl" id="resultTitle">Analysis Output</span>
+        <span class="card-tag">CLASSIFICATION · CONFIDENCE</span>
+      </div>
+      <!-- IDLE -->
+      <div class="idle-state" id="idleState">
+        <div class="idle-rings">
+          <div class="idle-ring"></div>
+          <div class="idle-ring"></div>
+          <div class="idle-ring"></div>
+        </div>
+        <div class="idle-label">AWAITING SCAN INPUT<br>SYSTEM READY</div>
+      </div>
+      <!-- LOADING -->
+      <div class="result-loading" id="loadState">
+        <div class="loading-orb"></div>
+        <div class="loading-txt">FUSING DUAL-STREAM<br>NETWORKS<span id="ldots"></span></div>
+        <div class="loading-bar"><div class="loading-bar-fill"></div></div>
+      </div>
+      <!-- RESULT -->
+      <div class="active-result" id="activeResult">
+        <div class="gauge-wrap">
+          <svg class="gauge-svg" viewBox="0 0 200 110">
+            <defs>
+              <linearGradient id="gGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#0df2c8"/>
+                <stop offset="100%" stop-color="#3d8bff"/>
+              </linearGradient>
+              <linearGradient id="rGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#ff4d6d"/>
+                <stop offset="100%" stop-color="#ffb830"/>
+              </linearGradient>
+            </defs>
+            <path d="M18 100 A82 82 0 0 1 182 100" fill="none" stroke="var(--bg-3)" stroke-width="10" stroke-linecap="round"/>
+            <path id="gaugeArc" d="M18 100 A82 82 0 0 1 182 100" fill="none" stroke="url(#gGrad)" stroke-width="10" stroke-linecap="round" stroke-dasharray="0 257.61" style="transition:stroke-dasharray 1.3s cubic-bezier(.22,1,.36,1)"/>
+            <text id="gaugeNum" x="100" y="95" text-anchor="middle" font-family="JetBrains Mono" font-size="22" font-weight="700" fill="#0df2c8">—</text>
+          </svg>
+        </div>
+        <div class="risk-bar-wrap">
+          <div class="risk-bar-track">
+            <div class="risk-bar-fill" id="riskBar"></div>
+          </div>
+        </div>
+        <div class="diag-card" id="diagCard" style="color:var(--c-teal)">
+          <div class="diag-verdict" id="diagVerdict">—</div>
+          <div class="diag-conf" id="diagConf">// CONFIDENCE: —</div>
+          <div class="diag-meta" id="diagMeta"></div>
+        </div>
+        <div class="result-actions">
+          <button class="btn-sm" onclick="exportPDF()">↓ EXPORT REPORT</button>
+          <button class="btn-sm" onclick="resetResult()">↺ NEW SCAN</button>
+        </div>
+      </div>
     </div>
 
-    <header>
-        <div class="header-brand">
-            <div class="header-logo">D</div>
-            <h1>DIAGNOMASS</h1>
+    <!-- COL 3: INTELLIGENCE -->
+    <div class="card">
+      <div class="card-bar">
+        <div class="card-dot blue"></div>
+        <span class="card-ttl">Clinical Intelligence</span>
+        <span class="card-tag">ARCH · METRICS</span>
+      </div>
+      <div class="card-body">
+        <div class="eyebrow">Dual-Stream EfficientNet-B7</div>
+        <h2 style="margin-bottom:4px">Neural Pipeline</h2>
+        <p>RGB pixels fused with offline <strong>CTE Maps</strong> (Color, Texture, Edge) — natural visual patterns combined with mathematical gradients for superior lesion differentiation.</p>
+        <div class="arch">
+          <div class="anode in">📷<br>INPUT</div>
+          <span class="arr">›</span>
+          <div class="split">
+            <div class="anode ex">🧠 RGB<br>EXPERT B7</div>
+            <div class="anode ex">🔬 CTE<br>EXPERT B7</div>
+          </div>
+          <span class="arr">›</span>
+          <div class="anode fu">⚡ ENSEMBLE<br>FUSION</div>
+          <span class="arr">›</span>
+          <div class="anode in" style="border-color:var(--c-blue);color:var(--c-blue)">📊 TABULAR<br>MLP</div>
+          <span class="arr">›</span>
+          <div class="anode out">🏥 OUTPUT</div>
         </div>
-        <div class="header-right">
-            <span class="header-tag">Derma-Vision AI</span>
-            <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle Dark Mode"></button>
+        <div class="sep"></div>
+        <div class="eyebrow">Balanced Anatomical Test Set</div>
+        <h2 style="margin-bottom:12px">Model Performance</h2>
+        <div class="metrics-list">
+          <div class="metric-item">
+            <div class="metric-hd"><span class="metric-name">Validation AUC</span><span class="metric-val">0.9941</span></div>
+            <div class="metric-track"><div class="metric-fill" data-w="99.41%"></div></div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-hd"><span class="metric-name">F1-Score (Accuracy)</span><span class="metric-val">0.9659</span></div>
+            <div class="metric-track"><div class="metric-fill" data-w="96.59%"></div></div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-hd"><span class="metric-name">Clinical Recall (Sensitivity)</span><span class="metric-val">0.9780</span></div>
+            <div class="metric-track"><div class="metric-fill" data-w="97.80%"></div></div>
+          </div>
         </div>
-    </header>
-
-    <div class="container">
-
-        <div class="dashboard-grid">
-
-            <div class="card">
-                <h2>Diagnostic Console</h2>
-                <p style="margin-bottom: 20px;">Upload a dermoscopic scan and initialize patient metadata.</p>
-
-                <div class="form-group">
-                    <label>High-Resolution Dermoscopic Image</label>
-                    <div class="drop-zone" id="dropZone">
-                        <input type="file" id="imageInput" accept="image/png, image/jpeg">
-                        <span class="drop-zone-icon">📷</span>
-                        <span class="drop-zone-text">Drag & drop image here, or click to browse</span>
-                        <span class="drop-zone-hint">Supports JPG, PNG up to 10MB</span>
-                        <img id="imagePreview" src="" alt="Lesion Preview">
-                    </div>
-                </div>
-
-                <div class="preview-grid" id="ctePreview" style="display:none;">
-                    <div class="preview-panel">
-                        <img id="rgbPreviewImg" src="" alt="RGB">
-                        <div class="preview-panel-label">RGB Input</div>
-                    </div>
-                    <div class="preview-panel">
-                        <canvas id="cteCanvas" width="400" height="400" style="width:100%; height:140px; object-fit:cover; display:block;"></canvas>
-                        <div class="preview-panel-label">CTE Feature Map</div>
-                    </div>
-                </div>
-
-                <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-                    <div>
-                        <label for="ageInput">Patient Age</label>
-                        <input type="number" id="ageInput" value="50" min="0" max="120">
-                    </div>
-                    <div>
-                        <label for="sexInput">Biological Sex</label>
-                        <select id="sexInput">
-                            <option value="Male">Male</option>
-                            <option value="Female">Female</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="siteInput">Localized Anatomical Site</label>
-                    <select id="siteInput">
-                        <option value="Head/Neck">Head/Neck</option>
-                        <option value="Lower Extremity">Lower Extremity (Legs)</option>
-                        <option value="Oral/Genital">Oral/Genital</option>
-                        <option value="Palms/Soles">Palms/Soles</option>
-                        <option value="Torso" selected>Torso (Chest/Back/Abdomen)</option>
-                        <option value="Upper Extremity">Upper Extremity (Arms)</option>
-                    </select>
-                </div>
-
-                <button class="btn-primary" id="submitBtn" onclick="runAnalysis()">⚡ Initiate AI Analysis</button>
-                <div class="loader" id="loadingText">Fusing dual-stream visual and tabular networks...</div>
-
-                <div id="resultBox">
-                    <div class="gauge-wrapper" id="gaugeWrapper">
-                        <svg class="gauge-svg" viewBox="0 0 200 110">
-                            <path d="M20 100 A80 80 0 0 1 180 100" fill="none" stroke="var(--gauge-trail)" stroke-width="14" stroke-linecap="round"/>
-                            <path id="gaugeArc" d="M20 100 A80 80 0 0 1 180 100" fill="none" stroke="var(--primary)" stroke-width="14" stroke-linecap="round" stroke-dasharray="0 251.33"/>
-                        </svg>
-                        <div class="gauge-diagnosis" id="diagnosisText"></div>
-                        <div class="gauge-confidence-text" id="confidenceText"></div>
-                        <div class="result-actions">
-                            <button class="btn-secondary" onclick="exportPDF()">📄 Export Report</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
-                <div>
-                    <h2>Clinical Intelligence</h2>
-                    <p>Derma-Vision utilizes a <strong>Dual-Stream EfficientNet-B7</strong> ensemble. Unlike standard classifiers, our network simultaneously processes raw RGB pixels alongside offline-computed <strong>CTE Maps</strong> (Color, Texture, and Edge saturation), fusing natural visual patterns with strict mathematical gradients.</p>
-
-                    <h3>Neural Architecture</h3>
-                    <div class="arch-diagram">
-                        <div class="arch-node arch-input">📷 Input<br>Image</div>
-                        <span class="arch-arrow">→</span>
-                        <div class="arch-split">
-                            <div class="arch-node arch-expert">🧠 RGB<br>Expert B7</div>
-                            <div class="arch-node arch-expert">🔬 CTE<br>Expert B7</div>
-                        </div>
-                        <span class="arch-arrow">→</span>
-                        <div class="arch-node arch-fusion">⚡ Ensemble<br>Fusion</div>
-                        <span class="arch-arrow">→</span>
-                        <div class="arch-node arch-input">📊 Tabular<br>MLP</div>
-                        <span class="arch-arrow">→</span>
-                        <div class="arch-node arch-output">🏥 Clinical<br>Diagnosis</div>
-                    </div>
-                </div>
-
-                <div>
-                    <h3>Model Performance Metrics</h3>
-                    <p style="font-size: 0.82rem; margin-top: -4px;">Validated on a strictly balanced anatomical test set.</p>
-                    <div class="performance-grid">
-                        <div>
-                            <div class="bar-label"><span>Validation AUC</span> <span class="bar-percent">0.9941</span></div>
-                            <div class="bar-container"><div class="bar-fill" data-width="99.41%"></div></div>
-                        </div>
-                        <div>
-                            <div class="bar-label"><span>F1-Score (Accuracy)</span> <span class="bar-percent">0.9659</span></div>
-                            <div class="bar-container"><div class="bar-fill" data-width="96.59%"></div></div>
-                        </div>
-                        <div>
-                            <div class="bar-label"><span>Clinical Recall (Sensitivity)</span> <span class="bar-percent">0.9780</span></div>
-                            <div class="bar-container"><div class="bar-fill" data-width="97.80%"></div></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="card anatomy-section">
-            <div class="anatomy-text">
-                <h2>Spatial Feature Localization</h2>
-                <p>Malignancy probabilities shift based on the anatomical origin. Derma-Vision utilizes a Tabular MLP to weigh visual inference against geographical prior probabilities.</p>
-                <ul style="color: var(--text-muted); line-height: 2; font-weight: 500; font-size: 0.9rem;">
-                    <li><strong>Head & Neck:</strong> High sun exposure, distinct texture.</li>
-                    <li><strong>Torso:</strong> Largest surface area, nodular variants.</li>
-                    <li><strong>Extremities:</strong> Arms (Upper) and Legs (Lower).</li>
-                    <li><strong>Acral Regions:</strong> Palms & Soles (ridge patterns).</li>
-                </ul>
-            </div>
-            <div class="anatomy-wrapper">
-                <div class="silhouette"></div>
-                <div class="node node-head" data-label="Head / Neck"></div>
-                <div class="node node-upper" data-label="Upper Extremity"></div>
-                <div class="node node-torso" data-label="Torso"></div>
-                <div class="node node-lower" data-label="Lower Extremity"></div>
-            </div>
-        </div>
-
-        <div class="card history-section">
-            <div class="history-header">
-                <h2>Scan History</h2>
-                <button class="btn-secondary" onclick="clearHistory()">Clear All</button>
-            </div>
-            <div class="history-list" id="historyList">
-                <div class="history-empty" id="historyEmpty">No scans recorded in this session yet.</div>
-            </div>
-        </div>
-
-        <div class="footer">
-            © 2026 Diagnomass | AI research & educational demonstration. Not a substitute for histopathological biopsy.
-        </div>
+      </div>
     </div>
 
-    <script type="module">
-        import { Client } from "https://cdn.jsdelivr.net/npm/@gradio/client/dist/index.min.js";
+  </div><!-- /top-grid -->
 
-        // --- State ---
-        let currentFile = null;
-        let currentImageDataURL = null;
-        let lastDiagnosis = '';
-        let lastConfidence = 0;
+  <!-- ANATOMY -->
+  <div class="card">
+    <div class="card-bar">
+      <div class="card-dot blue"></div>
+      <span class="card-ttl">Spatial Feature Localization</span>
+      <span class="card-tag">ANATOMICAL SITE PRIORS</span>
+    </div>
+    <div class="card-body">
+      <div class="anat-inner">
+        <div class="anat-info">
+          <div class="eyebrow">Tabular MLP Site Weighting</div>
+          <h2>Anatomical Intelligence</h2>
+          <p>Malignancy probabilities shift based on anatomical origin. The Tabular MLP weighs visual inference against geographical prior probabilities encoded during training.</p>
+          <div class="anat-rows">
+            <div class="anat-row">
+              <span class="anat-tag">HEAD/NECK</span>
+              <span class="anat-desc"><b>High UV exposure</b> — distinct keratinocyte texture signatures and solar damage markers.</span>
+            </div>
+            <div class="anat-row">
+              <span class="anat-tag">TORSO</span>
+              <span class="anat-desc"><b>Largest surface area</b> — nodular and superficial spreading variants most common.</span>
+            </div>
+            <div class="anat-row">
+              <span class="anat-tag">EXTREMITY</span>
+              <span class="anat-desc"><b>Arms &amp; Legs</b> — distinct vascular patterns; notable acral lentiginous risk.</span>
+            </div>
+            <div class="anat-row">
+              <span class="anat-tag">ACRAL</span>
+              <span class="anat-desc"><b>Palms &amp; Soles</b> — unique ridge patterns, higher acral lentiginous melanoma incidence.</span>
+            </div>
+          </div>
+        </div>
+        <div class="anat-fig">
+          <div class="anat-sil"></div>
+          <div class="anode-pt n-head" data-l="HEAD / NECK"></div>
+          <div class="anode-pt n-upper" data-l="UPPER EXT."></div>
+          <div class="anode-pt n-torso" data-l="TORSO"></div>
+          <div class="anode-pt n-lower" data-l="LOWER EXT."></div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-        // --- Disclaimer Modal ---
-        window.acceptDisclaimer = function() {
-            document.getElementById('disclaimerModal').classList.add('hidden');
-            localStorage.setItem('diagnomass_disclaimer_accepted', 'true');
-        }
-        if (localStorage.getItem('diagnomass_disclaimer_accepted') === 'true') {
-            document.getElementById('disclaimerModal').classList.add('hidden');
-        }
+  <!-- HISTORY -->
+  <div class="card">
+    <div class="card-bar">
+      <div class="card-dot amber"></div>
+      <span class="card-ttl">Scan History</span>
+      <span class="card-tag">SESSION LOG</span>
+    </div>
+    <div class="hist-bar">
+      <span>Recent sessions stored locally in this browser.</span>
+      <button class="btn-sm" onclick="clearHist()">CLEAR ALL</button>
+    </div>
+    <div class="hist-list" id="histList">
+      <div class="hist-empty">// NO SCANS RECORDED IN THIS SESSION</div>
+    </div>
+  </div>
 
-        // --- Dark Mode ---
-        window.toggleTheme = function() {
-            const html = document.documentElement;
-            const newTheme = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-            html.setAttribute('data-theme', newTheme);
-            localStorage.setItem('diagnomass_theme', newTheme);
-        }
-        const savedTheme = localStorage.getItem('diagnomass_theme');
-        if (savedTheme) document.documentElement.setAttribute('data-theme', savedTheme);
+</div>
 
-        // --- Drag & Drop ---
-        const dropZone = document.getElementById('dropZone');
-        const fileInput = document.getElementById('imageInput');
-        const preview = document.getElementById('imagePreview');
+<footer>
+  <span>© 2026 DIAGNOMASS · DERMA-VISION AI · NOT FOR CLINICAL USE</span>
+  <span>AI RESEARCH &amp; EDUCATIONAL DEMONSTRATION — NOT A SUBSTITUTE FOR BIOPSY</span>
+</footer>
 
-        dropZone.addEventListener('click', () => fileInput.click());
-        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); });
-        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
-        dropZone.addEventListener('drop', (e) => {
-            e.preventDefault(); dropZone.classList.remove('drag-over');
-            if (e.dataTransfer.files.length) { fileInput.files = e.dataTransfer.files; handleFile(e.dataTransfer.files[0]); }
-        });
-        fileInput.addEventListener('change', () => { if (fileInput.files[0]) handleFile(fileInput.files[0]); });
+<!-- ANIMATED MESH CANVAS -->
+<script>
+(function(){
+  const c=document.getElementById('bgCanvas');
+  const ctx=c.getContext('2d');
+  let W,H,pts=[];
+  function resize(){W=c.width=window.innerWidth;H=c.height=window.innerHeight}
+  function mkPts(){
+    pts=[];
+    const cols=Math.ceil(W/80)+1,rows=Math.ceil(H/80)+1;
+    for(let i=0;i<cols;i++)for(let j=0;j<rows;j++)
+      pts.push({x:i*80,y:j*80,ox:i*80,oy:j*80});
+  }
+  let t=0;
+  function draw(){
+    ctx.clearRect(0,0,W,H);t+=.004;
+    const isDark=document.documentElement.getAttribute('data-theme')!=='light';
+    const lc=isDark?'rgba(13,242,200,.045)':'rgba(0,110,88,.045)';
+    pts.forEach(p=>{
+      p.x=p.ox+Math.sin(t+p.oy*.018)*14;
+      p.y=p.oy+Math.cos(t+p.ox*.018)*14;
+    });
+    const cols=Math.ceil(W/80)+1,rows=Math.ceil(H/80)+1;
+    ctx.strokeStyle=lc;ctx.lineWidth=.7;
+    for(let i=0;i<cols-1;i++)for(let j=0;j<rows-1;j++){
+      const idx=i*rows+j;
+      if(idx>=pts.length||idx+1>=pts.length||idx+rows>=pts.length) continue;
+      const a=pts[idx],b=pts[idx+1],d=pts[idx+rows];
+      ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(d.x,d.y);ctx.stroke();
+    }
+    requestAnimationFrame(draw);
+  }
+  resize();mkPts();draw();
+  window.addEventListener('resize',()=>{resize();mkPts()});
+})();
+</script>
 
-        function handleFile(file) {
-            currentFile = file;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                currentImageDataURL = e.target.result;
-                preview.src = e.target.result;
-                preview.style.display = 'block';
-                dropZone.classList.add('has-image');
-                generateCTEPreview(e.target.result);
-            }
-            reader.readAsDataURL(file);
-        }
+<script type="module">
+import { Client } from "https://cdn.jsdelivr.net/npm/@gradio/client/dist/index.min.js";
 
-        // --- CTE Preview (Local Canvas Simulation) ---
-        function generateCTEPreview(dataURL) {
-            const img = new Image();
-            img.onload = function() {
-                document.getElementById('rgbPreviewImg').src = dataURL;
-                const canvas = document.getElementById('cteCanvas');
-                const ctx = canvas.getContext('2d');
-                canvas.width = img.width; canvas.height = img.height;
-                ctx.drawImage(img, 0, 0);
-                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                const data = imageData.data;
-                const grayscale = new Float32Array(canvas.width * canvas.height);
-                for (let i = 0; i < data.length; i += 4) {
-                    const r = data[i], g = data[i+1], b = data[i+2];
-                    grayscale[i/4] = 0.299*r + 0.587*g + 0.114*b;
-                }
-                for (let y = 1; y < canvas.height - 1; y++) {
-                    for (let x = 1; x < canvas.width - 1; x++) {
-                        const idx = y * canvas.width + x;
-                        const gx = -grayscale[idx-1] + grayscale[idx+1];
-                        const gy = -grayscale[idx-canvas.width] + grayscale[idx+canvas.width];
-                        const edge = Math.min(255, Math.sqrt(gx*gx+gy*gy) * 3);
-                        const pi = idx * 4;
-                        const r = data[pi], g = data[pi+1], b = data[pi+2];
-                        const maxC = Math.max(r,g,b), minC = Math.min(r,g,b);
-                        const sat = maxC === 0 ? 0 : ((maxC-minC)/maxC)*255;
-                        const lum = grayscale[idx];
-                        data[pi] = Math.min(255, lum * 0.6 + edge * 0.4);
-                        data[pi+1] = Math.min(255, sat * 0.7 + edge * 0.3);
-                        data[pi+2] = Math.min(255, edge);
-                    }
-                }
-                ctx.putImageData(imageData, 0, 0);
-                document.getElementById('ctePreview').style.display = 'grid';
-            }
-            img.src = dataURL;
-        }
+let curFile=null,curDataURL=null,lastDiag='',lastConf=0;
 
-        // --- Main Analysis ---
-        window.runAnalysis = async function() {
-            if (!currentFile) { alert("Please attach a dermoscopic image to proceed."); return; }
-            
-            const age = parseFloat(document.getElementById('ageInput').value);
-            const sex = document.getElementById('sexInput').value;
-            const site = document.getElementById('siteInput').value; // Now strictly pulls capitalized value from HTML
+window.acceptModal=function(){
+  document.getElementById('modal').classList.add('hidden');
+  localStorage.setItem('dv_disc','1');
+}
+if(localStorage.getItem('dv_disc')==='1')
+  document.getElementById('modal').classList.add('hidden');
 
-            const submitBtn = document.getElementById('submitBtn');
-            const loadingText = document.getElementById('loadingText');
-            const resultBox = document.getElementById('resultBox');
+window.toggleTheme=function(){
+  const h=document.documentElement;
+  const t=h.getAttribute('data-theme')==='dark'?'light':'dark';
+  h.setAttribute('data-theme',t);
+  localStorage.setItem('dv_theme',t);
+}
+const st=localStorage.getItem('dv_theme');
+if(st) document.documentElement.setAttribute('data-theme',st);
 
-            submitBtn.disabled = true;
-            loadingText.style.display = 'block';
-            resultBox.style.display = 'none';
+let dotInt=null;
+function startDots(){
+  let n=0;
+  dotInt=setInterval(()=>{document.getElementById('ldots').textContent=['',' .','..','...'][n++%4]},400);
+}
+function stopDots(){clearInterval(dotInt);const el=document.getElementById('ldots');if(el)el.textContent=''}
 
-            try {
-                const client = await Client.connect("developer-SOUMYA/Derma-Vision");
-                
-                // CRITICAL FIX: Sending data as a positional array to bypass dict mapping errors
-                const result = await client.predict("/predict", [
-                    currentFile,
-                    age,
-                    sex,
-                    site
-                ]);
+/* DROP ZONE */
+const dz=document.getElementById('dz'),fi=document.getElementById('fileIn'),ip=document.getElementById('imgPrev');
+dz.addEventListener('click',()=>fi.click());
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('over')});
+dz.addEventListener('dragleave',()=>dz.classList.remove('over'));
+dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('over');if(e.dataTransfer.files.length)handleFile(e.dataTransfer.files[0])});
+fi.addEventListener('change',()=>{if(fi.files[0])handleFile(fi.files[0])});
 
-                const diagnosis = result.data[0];
-                parseDiagnosis(diagnosis);
-            } catch (error) {
-                console.error("Diagnosis Error Caught:", error);
-                showError("Server Error. The Python script crashed or the server timed out. Check the browser console (F12) for logs.");
-            } finally {
-                submitBtn.disabled = false;
-                loadingText.style.display = 'none';
-            }
-        }
+function handleFile(f){
+  curFile=f;
+  const r=new FileReader();
+  r.onload=e=>{
+    curDataURL=e.target.result;
+    ip.src=e.target.result;ip.style.display='block';
+    dz.classList.add('has-img');
+    genCTE(e.target.result);
+  };
+  r.readAsDataURL(f);
+}
 
-        function parseDiagnosis(rawText) {
-            const isMalignant = rawText.toLowerCase().includes('malignant');
-            const numMatch = rawText.match(/([\d.]+)\s*%/);
-            let confidence = numMatch ? parseFloat(numMatch[1]) : (isMalignant ? 87.5 : 12.5);
-            if (confidence > 100) confidence = 99;
+function genCTE(url){
+  const img=new Image();
+  img.onload=function(){
+    document.getElementById('rgbImg').src=url;
+    const cv=document.getElementById('cteCanvas'),cx=cv.getContext('2d');
+    cv.width=img.width;cv.height=img.height;cx.drawImage(img,0,0);
+    const id=cx.getImageData(0,0,cv.width,cv.height),d=id.data;
+    const gs=new Float32Array(cv.width*cv.height);
+    for(let i=0;i<d.length;i+=4) gs[i/4]=.299*d[i]+.587*d[i+1]+.114*d[i+2];
+    for(let y=1;y<cv.height-1;y++) for(let x=1;x<cv.width-1;x++){
+      const idx=y*cv.width+x;
+      const gx=-gs[idx-1]+gs[idx+1],gy=-gs[idx-cv.width]+gs[idx+cv.width];
+      const edge=Math.min(255,Math.sqrt(gx*gx+gy*gy)*3);
+      const pi=idx*4,mx=Math.max(d[pi],d[pi+1],d[pi+2]),mn=Math.min(d[pi],d[pi+1],d[pi+2]);
+      const sat=mx===0?0:((mx-mn)/mx)*255;
+      d[pi]=Math.min(255,gs[idx]*.6+edge*.4);
+      d[pi+1]=Math.min(255,sat*.7+edge*.3);
+      d[pi+2]=Math.min(255,edge);
+    }
+    cx.putImageData(id,0,0);
+    document.getElementById('cteWrap').style.display='block';
+  };
+  img.src=url;
+}
 
-            lastDiagnosis = isMalignant ? 'Malignant' : 'Benign';
-            lastConfidence = confidence;
+/* STATE MANAGEMENT */
+function showIdle(){
+  document.getElementById('idleState').style.display='flex';
+  document.getElementById('loadState').classList.remove('show');
+  document.getElementById('activeResult').classList.remove('show');
+  document.getElementById('resultDot').style.cssText='';
+  document.getElementById('resultTitle').textContent='Analysis Output';
+}
+function showLoading(){
+  document.getElementById('idleState').style.display='none';
+  document.getElementById('loadState').classList.add('show');
+  document.getElementById('activeResult').classList.remove('show');
+  startDots();
+}
+function showResult(){
+  document.getElementById('idleState').style.display='none';
+  document.getElementById('loadState').classList.remove('show');
+  document.getElementById('activeResult').classList.add('show');
+  stopDots();
+}
+function showError(msg){
+  stopDots();
+  document.getElementById('loadState').classList.remove('show');
+  document.getElementById('idleState').style.display='none';
+  document.getElementById('activeResult').classList.add('show');
+  document.getElementById('diagVerdict').textContent='⚠ SERVER UNAVAILABLE';
+  document.getElementById('diagVerdict').style.color='var(--c-amber)';
+  document.getElementById('diagConf').textContent=msg;
+  document.getElementById('diagCard').style.color='var(--c-amber)';
+  document.getElementById('gaugeArc').setAttribute('stroke-dasharray','0 257.61');
+  document.getElementById('gaugeNum').textContent='—';
+}
 
-            const wrapper = document.getElementById('gaugeWrapper');
-            const diagText = document.getElementById('diagnosisText');
-            const confText = document.getElementById('confidenceText');
-            const resultBox = document.getElementById('resultBox');
+window.resetResult=function(){
+  showIdle();curFile=null;curDataURL=null;
+  document.getElementById('imgPrev').style.display='none';
+  dz.classList.remove('has-img');
+  document.getElementById('cteWrap').style.display='none';
+  document.getElementById('fileIn').value='';
+}
 
-            const color = isMalignant ? '#e11d48' : '#059669';
-            const bgColor = isMalignant ? 'var(--danger-bg)' : 'var(--success-bg)';
-            const borderColor = isMalignant ? 'var(--danger-border)' : 'var(--success-border)';
+/* ANALYSIS */
+window.runAnalysis=async function(){
+  if(!curFile){alert('Please attach a dermoscopic image to proceed.');return}
+  const age=parseFloat(document.getElementById('ageIn').value);
+  const sex=document.getElementById('sexIn').value;
+  const site=document.getElementById('siteIn').value;
+  const btn=document.getElementById('runBtn');
+  btn.disabled=true;showLoading();
+  try{
+    const client=await Client.connect("developer-SOUMYA/Derma-Vision");
+    const result=await client.predict("/predict",[curFile,age,sex,site]);
+    parseDiagnosis(result.data[0],age,sex,site);
+  }catch(e){
+    console.error(e);showError('Server error or timeout. Check console (F12).');
+  }finally{btn.disabled=false}
+}
 
-            wrapper.style.background = bgColor;
-            wrapper.style.border = `2px solid ${borderColor}`;
-            diagText.textContent = isMalignant ? '🔴 MALIGNANT DETECTED' : '🟢 BENIGN — LOW RISK';
-            diagText.style.color = color;
-            confText.textContent = `AI Confidence: ${confidence.toFixed(1)}%`;
+function parseDiagnosis(raw,age,sex,site){
+  // ── LOG RAW RESPONSE so you can inspect it in console (F12) ──
+  console.log('%c[Diagnomass] RAW API RESPONSE:', 'color:#0df2c8;font-weight:bold;font-size:13px', raw);
+  console.log('%c[Diagnomass] TYPE:', 'color:#0df2c8', typeof raw);
+  if(typeof raw === 'object') console.log('%c[Diagnomass] JSON:', 'color:#0df2c8', JSON.stringify(raw));
 
-            const arc = document.getElementById('gaugeArc');
-            arc.style.stroke = color;
-            const totalLength = 251.33;
-            const fillLength = (confidence / 100) * totalLength;
-            arc.style.transition = 'stroke-dasharray 1s ease-out';
-            arc.setAttribute('stroke-dasharray', `${fillLength} ${totalLength}`);
+  // ── ROBUST DETECTION ──
+  // Handle: string label, numeric class (0/1), confidence float (0.0-1.0), object, etc.
+  let isMal = false;
+  let conf = null;
 
-            resultBox.style.display = 'block';
-            addToHistory(isMalignant, confidence);
-        }
+  if(typeof raw === 'number'){
+    // Backend returned a raw float probability (e.g. 0.87)
+    if(raw <= 1.0){
+      conf = raw * 100;
+      isMal = raw >= 0.5;
+    } else {
+      // Raw percentage like 87
+      conf = raw;
+      isMal = raw >= 50;
+    }
+  } else if(typeof raw === 'object' && raw !== null){
+    // Could be {label: "malignant", score: 0.87} or similar
+    const label = (raw.label || raw.class || raw.prediction || '').toString().toLowerCase();
+    const score = raw.score ?? raw.confidence ?? raw.probability ?? raw.prob ?? null;
+    isMal = label.includes('malignant') || label.includes('melanoma') || label.includes('mel')
+            || label === '1' || label === 'positive';
+    if(!isMal && label.includes('benign') || label === '0' || label === 'negative') isMal = false;
+    conf = score !== null ? (score <= 1 ? score * 100 : score) : null;
+  } else {
+    // String response — check for every possible malignant keyword
+    const s = raw.toString().toLowerCase();
+    isMal = s.includes('malignant')
+         || s.includes('melanoma')
+         || s.includes('mel ')
+         || s.includes('"mel"')
+         || s.includes("'mel'")
+         || s.includes('positive')
+         || s.includes('cancerous')
+         || s.includes('class 1')
+         || s.includes('class_1')
+         || /\blabel[:\s]+1\b/.test(s)
+         || /^1$/.test(s.trim());
+    // Extract any percentage or decimal probability
+    const pctMatch = s.match(/([\d.]+)\s*%/);
+    const decMatch = s.match(/\b0\.([\d]+)\b/);
+    if(pctMatch) conf = parseFloat(pctMatch[1]);
+    else if(decMatch) conf = parseFloat('0.'+decMatch[1]) * 100;
+  }
 
-        function showError(msg) {
-            const wrapper = document.getElementById('gaugeWrapper');
-            const diagText = document.getElementById('diagnosisText');
-            const confText = document.getElementById('confidenceText');
-            const resultBox = document.getElementById('resultBox');
-            wrapper.style.background = 'var(--warning-bg)';
-            wrapper.style.border = '2px solid var(--warning-border)';
-            diagText.textContent = '⚠️ SERVER UNAVAILABLE';
-            diagText.style.color = 'var(--warning-text)';
-            confText.textContent = msg;
-            document.getElementById('gaugeArc').setAttribute('stroke-dasharray', '0 251.33');
-            resultBox.style.display = 'block';
-        }
+  // Final confidence fallback
+  if(conf === null) conf = isMal ? 87.5 : 12.5;
+  if(conf > 100) conf = 99.9;
 
-        // --- History Log ---
-        function addToHistory(isMalignant, confidence) {
-            const history = JSON.parse(localStorage.getItem('diagnomass_history') || '[]');
-            history.unshift({
-                thumbnail: currentImageDataURL ? currentImageDataURL.substring(0, 200) + '...' : '',
-                fullThumb: currentImageDataURL,
-                diagnosis: isMalignant ? 'Malignant' : 'Benign',
-                confidence: confidence.toFixed(1),
-                age: document.getElementById('ageInput').value,
-                sex: document.getElementById('sexInput').value,
-                site: document.getElementById('siteInput').options[document.getElementById('siteInput').selectedIndex].text,
-                timestamp: new Date().toLocaleString()
-            });
-            if (history.length > 20) history.pop();
-            localStorage.setItem('diagnomass_history', JSON.stringify(history));
-            renderHistory();
-        }
+  console.log('%c[Diagnomass] PARSED → isMalignant:', 'color:#0df2c8', isMal, '| confidence:', conf.toFixed(1)+'%');
+  lastDiag=isMal?'Malignant':'Benign';lastConf=conf;
 
-        function renderHistory() {
-            const list = document.getElementById('historyList');
-            const history = JSON.parse(localStorage.getItem('diagnomass_history') || '[]');
-            if (history.length === 0) {
-                list.innerHTML = '<div class="history-empty">No scans recorded in this session yet.</div>';
-                return;
-            }
-            list.innerHTML = history.map((item, i) => `
-                <div class="history-item">
-                    <img class="history-thumb" src="${item.fullThumb || ''}" alt="Scan ${i+1}" onerror="this.style.display='none'">
-                    <div class="history-info">
-                        <div class="history-diag">${item.diagnosis} — ${item.confidence}%</div>
-                        <div class="history-meta">${item.site} · Age ${item.age} · ${item.sex} · ${item.timestamp}</div>
-                    </div>
-                    <span class="history-badge ${item.diagnosis === 'Malignant' ? 'badge-malignant' : 'badge-benign'}">${item.diagnosis}</span>
-                </div>
-            `).join('');
-        }
-        renderHistory();
+  const dot=document.getElementById('resultDot');
+  dot.style.background=isMal?'var(--c-red)':'var(--c-teal)';
+  dot.style.boxShadow=`0 0 5px ${isMal?'var(--c-red)':'var(--c-teal)'}`;
+  document.getElementById('resultTitle').textContent=isMal?'⚠ Malignant Detected':'✓ Benign — Low Risk';
 
-        window.clearHistory = function() {
-            localStorage.removeItem('diagnomass_history');
-            renderHistory();
-        }
+  const arc=document.getElementById('gaugeArc');
+  arc.setAttribute('stroke',`url(#${isMal?'rGrad':'gGrad'})`);
+  const total=257.61;
+  setTimeout(()=>arc.setAttribute('stroke-dasharray',`${(conf/100)*total} ${total}`),50);
 
-        // --- PDF Export ---
-        window.exportPDF = function() {
-            const age = document.getElementById('ageInput').value;
-            const sex = document.getElementById('sexInput').value;
-            const site = document.getElementById('siteInput').options[document.getElementById('siteInput').selectedIndex].text;
-            const now = new Date().toLocaleString();
+  const numEl=document.getElementById('gaugeNum');
+  numEl.style.fill=isMal?'#ff4d6d':'#0df2c8';
+  let n=0;const target=Math.round(conf);
+  const step=setInterval(()=>{n=Math.min(n+2,target);numEl.textContent=n+'%';if(n>=target)clearInterval(step)},20);
 
-            const w = window.open('', '_blank');
-            w.document.write(`
-                <html><head><title>Diagnomass Clinical Report</title>
-                <style>
-                    body { font-family: 'Segoe UI', sans-serif; padding: 40px; color: #1e293b; max-width: 700px; margin: auto; }
-                    h1 { color: #0f766e; border-bottom: 3px solid #0f766e; padding-bottom: 8px; }
-                    .row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e2e8f0; }
-                    .label { font-weight: 600; color: #64748b; }
-                    .diagnosis-box { margin: 24px 0; padding: 20px; border-radius: 12px; text-align: center; font-size: 1.4rem; font-weight: 800; }
-                    .benign { background: #d1fae5; color: #059669; border: 2px solid #6ee7b7; }
-                    .malignant { background: #fee2e2; color: #e11d48; border: 2px solid #fda4af; }
-                    .disclaimer { margin-top: 40px; padding: 16px; background: #fef3c7; border-radius: 8px; font-size: 0.85rem; color: #92400e; }
-                    @media print { body { padding: 20px; } }
-                </style></head><body>
-                <h1>🏥 Diagnomass — Clinical AI Report</h1>
-                <p style="color:#64748b;">Generated: ${now}</p>
-                <div class="row"><span class="label">Patient Age</span><span>${age}</span></div>
-                <div class="row"><span class="label">Biological Sex</span><span>${sex}</span></div>
-                <div class="row"><span class="label">Anatomical Site</span><span>${site}</span></div>
-                <div class="row"><span class="label">AI Model</span><span>Dual-Stream EfficientNet-B7 (99.41% AUC)</span></div>
-                <div class="diagnosis-box ${lastDiagnosis === 'Malignant' ? 'malignant' : 'benign'}">
-                    ${lastDiagnosis === 'Malignant' ? '🔴' : '🟢'} ${lastDiagnosis.toUpperCase()} — Confidence: ${lastConfidence.toFixed(1)}%
-                </div>
-                <div class="disclaimer">
-                    <strong>⚠️ Legal Disclaimer:</strong> This report was generated by an AI research tool and does NOT constitute medical advice.
-                    All findings must be confirmed by histopathological biopsy. Diagnomass is intended for educational and research purposes only.
-                </div>
-                <p style="margin-top:24px; text-align:center; color:#94a3b8; font-size:0.8rem;">© 2026 Diagnomass | Derma-Vision AI</p>
-                </body></html>
-            `);
-            w.document.close();
-            setTimeout(() => w.print(), 500);
-        }
+  const rb=document.getElementById('riskBar');
+  rb.style.color=isMal?'var(--c-red)':'var(--c-teal)';
+  rb.style.background=isMal?'linear-gradient(90deg,var(--c-red),var(--c-amber))':'linear-gradient(90deg,var(--c-teal),var(--c-blue))';
+  setTimeout(()=>{rb.style.width=conf+'%'},100);
 
-        // --- Animate performance bars on load ---
-        window.addEventListener('load', () => {
-            setTimeout(() => {
-                document.querySelectorAll('.bar-fill').forEach(bar => {
-                    bar.style.width = bar.getAttribute('data-width');
-                });
-            }, 600);
-        });
-    </script>
+  const card=document.getElementById('diagCard');
+  card.style.color=isMal?'var(--c-red)':'var(--c-teal)';
+  document.getElementById('diagVerdict').textContent=isMal?'MALIGNANT DETECTED':'BENIGN — LOW RISK';
+  document.getElementById('diagVerdict').style.color=isMal?'var(--c-red)':'var(--c-teal)';
+  document.getElementById('diagConf').textContent=`// AI_CONFIDENCE: ${conf.toFixed(1)}%`;
+  const siteEl=document.getElementById('siteIn');
+  document.getElementById('diagMeta').innerHTML=
+    `<span class="diag-chip">AGE ${age}</span><span class="diag-chip">${sex.toUpperCase()}</span><span class="diag-chip">${siteEl.options[siteEl.selectedIndex].text.toUpperCase()}</span>`;
+
+  showResult();
+  addHist(isMal,conf,age,sex,siteEl.options[siteEl.selectedIndex].text);
+}
+
+/* HISTORY */
+function addHist(isMal,conf,age,sex,site){
+  const h=JSON.parse(localStorage.getItem('dv_hist')||'[]');
+  h.unshift({thumb:curDataURL,diag:isMal?'Malignant':'Benign',conf:conf.toFixed(1),age,sex,site,ts:new Date().toLocaleString()});
+  if(h.length>20)h.pop();
+  localStorage.setItem('dv_hist',JSON.stringify(h));
+  renderHist();
+}
+function renderHist(){
+  const el=document.getElementById('histList');
+  const h=JSON.parse(localStorage.getItem('dv_hist')||'[]');
+  if(!h.length){el.innerHTML='<div class="hist-empty">// NO SCANS RECORDED IN THIS SESSION</div>';return}
+  el.innerHTML=h.map((it,i)=>`
+    <div class="hist-item">
+      <img class="hist-thumb" src="${it.thumb||''}" alt="${i}" onerror="this.style.display='none'">
+      <div>
+        <div class="hist-diag">${it.diag.toUpperCase()} — ${it.conf}%</div>
+        <div class="hist-meta">${it.site} · AGE ${it.age} · ${it.sex.toUpperCase()} · ${it.ts}</div>
+      </div>
+      <span class="hist-badge ${it.diag==='Malignant'?'hb-m':'hb-b'}">${it.diag}</span>
+    </div>
+  `).join('');
+}
+renderHist();
+window.clearHist=function(){localStorage.removeItem('dv_hist');renderHist()}
+
+/* PDF EXPORT */
+window.exportPDF=function(){
+  const age=document.getElementById('ageIn').value;
+  const sex=document.getElementById('sexIn').value;
+  const siteEl=document.getElementById('siteIn');
+  const site=siteEl.options[siteEl.selectedIndex].text;
+  const now=new Date().toLocaleString();
+  const w=window.open('','_blank');
+  w.document.write(`<html><head><title>Diagnomass Report</title>
+  <style>body{font-family:'Courier New',monospace;padding:40px;color:#1e293b;max-width:700px;margin:auto;background:#f8fafc}
+  h1{color:#006e58;border-bottom:3px solid #006e58;padding-bottom:8px;font-size:1.3rem;letter-spacing:2px}
+  .row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #e2e8f0;font-size:.82rem}
+  .lbl{font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:1px}
+  .box{margin:24px 0;padding:22px;border-radius:8px;text-align:center;font-size:1.2rem;font-weight:800;letter-spacing:2px}
+  .bn{background:#d1fae5;color:#059669;border:2px solid #6ee7b7}
+  .ml{background:#fee2e2;color:#e11d48;border:2px solid #fda4af}
+  .disc{margin-top:40px;padding:14px;background:#fef3c7;border-radius:8px;font-size:.75rem;color:#92400e}
+  @media print{body{padding:20px}}</style></head><body>
+  <h1>DIAGNOMASS — DERMA-VISION AI REPORT</h1>
+  <p style="color:#64748b;font-size:.72rem;letter-spacing:1px">GENERATED: ${now}</p>
+  <div class="row"><span class="lbl">Patient Age</span><span>${age}</span></div>
+  <div class="row"><span class="lbl">Biological Sex</span><span>${sex}</span></div>
+  <div class="row"><span class="lbl">Anatomical Site</span><span>${site}</span></div>
+  <div class="row"><span class="lbl">AI Model</span><span>Dual-Stream EfficientNet-B7 (AUC 99.41%)</span></div>
+  <div class="box ${lastDiag==='Malignant'?'ml':'bn'}">${lastDiag.toUpperCase()} — CONFIDENCE: ${lastConf.toFixed(1)}%</div>
+  <div class="disc"><strong>⚠ LEGAL DISCLAIMER:</strong> This report is generated by an AI research tool and does NOT constitute medical advice. Confirm all findings via histopathological biopsy. For educational &amp; research purposes only.</div>
+  <p style="margin-top:24px;text-align:center;color:#94a3b8;font-size:.65rem;letter-spacing:1px">© 2026 DIAGNOMASS · DERMA-VISION AI</p>
+  </body></html>`);
+  w.document.close();setTimeout(()=>w.print(),500);
+}
+
+/* METRIC BARS */
+window.addEventListener('load',()=>{
+  setTimeout(()=>{
+    document.querySelectorAll('.metric-fill').forEach(b=>b.style.width=b.getAttribute('data-w'));
+  },700);
+});
+</script>
 </body>
 </html>
